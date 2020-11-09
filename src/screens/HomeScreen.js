@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { FlatList, SafeAreaView, StyleSheet, View } from 'react-native';
-import { List, TextInput } from 'react-native-paper';
+import { List, TextInput, Button } from 'react-native-paper';
 
 const DATA = [
   {
@@ -17,6 +17,31 @@ const DATA = [
     id: '3',
     title: 'Truncate Title text such that the total number of lines does not exceed this number.',
     icon: 'clock',
+  },
+  {
+    id: '4',
+    title: 'テスト',
+    icon: '',
+  },
+  {
+    id: '5',
+    title: 'テスト',
+    icon: '',
+  },
+  {
+    id: '6',
+    title: 'テスト',
+    icon: '',
+  },
+  {
+    id: '7',
+    title: 'テスト',
+    icon: '',
+  },
+  {
+    id: '8',
+    title: 'テスト',
+    icon: '',
   },
 ];
 
@@ -39,12 +64,24 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <TextInput
+        style={styles.textInput}
+        selectionColor="#fff"
+        theme={{ colors: { text: '#fff' }, roundness: 0 }}
+        placeholderTextColor="#fff"
         placeholder="タスクを追加"
         value={text}
         onChangeText={text => setText(text)}
-        left={<TextInput.Icon icon="plus-circle" />}
+        left={<TextInput.Icon icon="plus-circle" color="#fff" />}
       />
       <FlatList data={DATA} renderItem={renderItem} keyExtractor={item => item.id} />
+      <View style={styles.buttons}>
+        <Button style={styles.button} icon="pencil" mode="contained" color="#434343" contentStyle={{ height: 80, flexDirection: 'column' }} theme={{ roundness: 0 }}>
+          編集／戻る
+        </Button>
+        <Button style={styles.button} icon="check" mode="contained" color="#434343" contentStyle={{ height: 80, flexDirection: 'column' }} theme={{ roundness: 0 }}>
+          実行／決定
+        </Button>
+      </View>
     </SafeAreaView>
   );
 }
@@ -58,5 +95,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     paddingTop: 20,
     paddingBottom: 20,
+  },
+  textInput: {
+    backgroundColor: '#434343',
+    borderRadius: 0,
+  },
+  buttons: {
+    flexDirection: 'row',
+  },
+  button: {
+    flex: 1,
   },
 });

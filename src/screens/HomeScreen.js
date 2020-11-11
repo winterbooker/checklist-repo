@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { FlatList, SafeAreaView, StyleSheet, View } from 'react-native';
+import { FlatList, SafeAreaView, StyleSheet, View, Image, Animated, Text, TouchableOpacity } from 'react-native';
 import { List, TextInput, Button } from 'react-native-paper';
+import { SwipeListView } from 'react-native-swipe-list-view';
 
-const DATA = [
+const listData = [
   {
     id: '1',
     title: '抗酸化物質とは、抗酸化剤とも呼ばれ、生体内、食品、日用品、工業原料において酸素が関与する有害な反応を減弱もしくは除去する物質の総称である。',
@@ -45,12 +46,19 @@ const DATA = [
   },
 ];
 
+const rowSwipeAnimatedValues = {};
+Array(20)
+  .fill('')
+  .forEach((_, i) => {
+    rowSwipeAnimatedValues[`${i}`] = new Animated.Value(0);
+  });
+
 const Items = ({ title, icon }) => (
   <List.Item
     style={styles.listItem}
     title={title}
     titleNumberOfLines={2}
-    left={props => <List.Icon {...props} icon={icon} />}
+    left={(props) => <List.Icon {...props} icon={icon} />}
   />
 );
 
@@ -58,7 +66,24 @@ export default function HomeScreen() {
   const [text, setText] = React.useState('');
 
   const renderItem = ({ item }) => (
-    <Items title={item.title} icon={item.icon} />
+    <Items style={styles.rowFront} title={item.title} icon={item.icon} />
+  );
+
+  const renderHiddenItem = (data, rowMap) => (
+    <View style={styles.rowBack}>
+      <TouchableOpacity
+        style={[styles.backRightBtn, styles.backRightBtnLeft]}
+        onPress={() => closeRow(rowMap, data.item.key)}
+      >
+        <Image source={require('../../images/edit.png')} style={styles.edit} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.backRightBtn, styles.backRightBtnRight]}
+        onPress={() => deleteRow(rowMap, data.item.key)}
+      >
+        <Image source={require('../../images/trash.png')} style={styles.trash} />
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -73,15 +98,17 @@ export default function HomeScreen() {
         onChangeText={text => setText(text)}
         left={<TextInput.Icon icon="plus-circle" color="#fff" />}
       />
-      <FlatList data={DATA} renderItem={renderItem} keyExtractor={item => item.id} />
-      <View style={styles.buttons}>
-        <Button style={styles.button} icon="pencil" mode="contained" color="#434343" contentStyle={{ height: 80, flexDirection: 'column' }} theme={{ roundness: 0 }}>
-          編集／戻る
-        </Button>
-        <Button style={styles.button} icon="check" mode="contained" color="#434343" contentStyle={{ height: 80, flexDirection: 'column' }} theme={{ roundness: 0 }}>
-          実行／決定
-        </Button>
-      </View>
+      <SwipeListView
+        data={listData}
+        renderItem={renderItem}
+        renderHiddenItem={renderHiddenItem}
+        rightOpenValue={-150}
+        previewRowKey={'0'}
+        previewOpenValue={-40}
+        previewOpenDelay={3000}
+        // onRowDidOpen={onRowDidOpen}
+        // onSwipeValueChange={onSwipeValueChange}
+      />
     </SafeAreaView>
   );
 }
@@ -90,20 +117,51 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
+    backgroundColor: '#fff',
   },
   listItem: {
     borderBottomWidth: 1,
     paddingTop: 20,
     paddingBottom: 20,
+    backgroundColor: '#fff',
   },
   textInput: {
     backgroundColor: '#434343',
     borderRadius: 0,
   },
-  buttons: {
-    flexDirection: 'row',
+  rowFront: {
+    alignItems: 'center',
   },
-  button: {
+  rowBack: {
+    alignItems: 'center',
+    backgroundColor: '#DDD',
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingLeft: 15,
+  },
+  backRightBtn: {
+    alignItems: 'center',
+    bottom: 0,
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    width: 75,
+  },
+  backRightBtnLeft: {
+    backgroundColor: '#3F88C5',
+    right: 75,
+  },
+  backRightBtnRight: {
+    backgroundColor: '#FF312E',
+    right: 0,
+  },
+  edit: {
+    height: 25,
+    width: 25,
+  },
+  trash: {
+    height: 25,
+    width: 25,
   },
 });

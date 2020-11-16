@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Animated, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { TextInput, Appbar, Button, Paragraph, Dialog, Portal, RadioButton } from 'react-native-paper';
 import { SwipeListView, SwipeRow } from 'react-native-swipe-list-view';
-import Swipeable from 'react-native-swipeable';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabase('db');
@@ -25,21 +25,25 @@ const Items = () => {
     return null;
   }
 
-  const rightButtons = [
-    <TouchableOpacity style={{ backgroundColor: 'grey', height: 50 }}><Text>編集</Text></TouchableOpacity>,
-    <TouchableOpacity
-      style={{ backgroundColor: 'red', height: 50 }}
-      onPress={console.log('great!!')}
-    >
+  const handleDelete = () => {
+    db.transaction(tx => {
+      tx.executeSql('delete from items;')
+    });
+  };
+
+
+  const rightSwipe = () => (
+    <TouchableOpacity style={styles.deleteBox} onPress={handleDelete}>
       <Text>削除</Text>
-    </TouchableOpacity>,
-  ];
+    </TouchableOpacity>
+  );
 
   return (
     <ScrollView style={styles.sectionContainer}>
       {items.map(({ id, value }) => (
-        <Swipeable style={styles.item} rightButtons={rightButtons}>
+        <Swipeable key={id} renderRightActions={rightSwipe}>
           <TouchableOpacity
+            style={styles.item}
             key={id}
             onPress={() => console.log({ value })}
           >
@@ -100,29 +104,6 @@ export default function HomeScreen() {
   };
 
 
-  /*
-  const renderItem = () => (
-    <Items />
-  );
-
-  const renderHiddenItem = (data, rowMap) => (
-    <View style={styles.rowBack}>
-      <TouchableOpacity
-        style={[styles.backRightBtn, styles.backRightBtnLeft]}
-        onPress={() => closeRow(rowMap, data.item.key)}
-      >
-        <Image source={require('../../images/edit.png')} style={styles.edit} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.backRightBtn, styles.backRightBtnRight]}
-        onPress={() => deleteRow(rowMap, data.item.key)}
-      >
-        <Image source={require('../../images/trash.png')} style={styles.trash} />
-      </TouchableOpacity>
-    </View>
-  );
-  */
-
   return (
     <View style={styles.container}>
       <Appbar.Header style={{ backgroundColor: themeColor }}>
@@ -161,9 +142,11 @@ export default function HomeScreen() {
         }}
         left={<TextInput.Icon icon="plus-circle" color="#fff" />}
       />
-      <Items
-        key={`forceupdate-todo-${forceUpdateId}`}
-      />
+      <ScrollView>
+        <Items
+          key={`forceupdate-todo-${forceUpdateId}`}
+        />
+      </ScrollView>
       <Appbar style={styles.appbarbottom}>
         <Appbar.Action style={styles.appbarbottomIcon} size={30} icon="home" onPress={() => console.log('Pressed archive')} />
         <Appbar.Action style={styles.appbarbottomIcon} size={26} icon="magnify" onPress={() => console.log('Pressed archive')} />
@@ -252,5 +235,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingLeft: 20,
+  },
+  deleteBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'red',
+    width: 100,
   },
 });

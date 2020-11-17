@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Animated, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { TextInput, Appbar } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';

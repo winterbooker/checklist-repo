@@ -53,7 +53,7 @@ const Items = ({ navigation }) => {
           <TouchableOpacity
             style={styles.item}
             key={id}
-            onPress={() => navigation.navigate('List')}
+            onPress={() => navigation.navigate('List', { itemId: id })}
           >
             <Text>{value}</Text>
           </TouchableOpacity>

@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, FlatList, SafeAreaView, StyleSheet, View, Image, Animated, Text, TouchableOpacity, TouchableHighlight, Dimensions } from 'react-native';
-import { List, TextInput, Button, Appbar } from 'react-native-paper';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { TextInput } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabase('db');
 
 
-const Items = ({ done: doneHeading, onPressItem }) => {
+const Items = ({ done: doneHeading, onPressItem, itemId }) => {
   const [items, setItems] = useState(null);
 
   useEffect(() => {
     db.transaction(tx => {
       tx.executeSql(
-        'select * from items where done = ?;',
-        [doneHeading ? 1 : 0],
+        'select * from list where done = ? and listId = ?;',
+        [doneHeading ? 1 : 0, itemId],
         (_, { rows: { _array } }) => setItems(_array),
       );
     });
@@ -28,11 +28,11 @@ const Items = ({ done: doneHeading, onPressItem }) => {
 
   const handleDelete = (id) => {
     db.transaction(tx => {
-      tx.executeSql('delete from items where id = ?;', [id]);
+      tx.executeSql('delete from list where id = ?;', [id]);
     });
     db.transaction(tx => {
       tx.executeSql(
-        'select * from items;',
+        'select * from list;',
         null,
         (_, { rows: { _array } }) => setItems(_array),
       );
@@ -79,15 +79,20 @@ const Items = ({ done: doneHeading, onPressItem }) => {
   );
 };
 
-export default function ListScreen() {
+export default function ListScreen({ route }) {
   const [text, setText] = useState('');
-  const [forceUpdate, forceUpdateId] = useForceUpdate()
+  const [forceUpdate, forceUpdateId] = useForceUpdate();
+
+  const { itemId } = route.params;
 
   useEffect(() => {
     db.transaction(tx => {
       tx.executeSql(
-        'create table if not exists items (id integer primary key not null, done int, value text);'
+        'create table if not exists list (id integer primary key not null, done int, value text, listId integer);'
       );
+      // tx.executeSql(
+      // 'drop table list;',
+      // );
     });
   }, []);
 
@@ -97,8 +102,8 @@ export default function ListScreen() {
     }
 
     db.transaction(tx => {
-      tx.executeSql('insert into items (done, value) values (0, ?)', [text]);
-      tx.executeSql('select * from items', [], (_, { rows }) =>
+      tx.executeSql('insert into list (done, value, listId) values (0, ?, ?)', [text, itemId]);
+      tx.executeSql('select * from list where listId = ?', [itemId], (_, { rows }) =>
         console.log(JSON.stringify(rows))
       );
     },
@@ -115,29 +120,29 @@ export default function ListScreen() {
           <Items
             key={`forceupdate-todo-${forceUpdateId}`}
             done={false}
+            itemId={itemId}
             onPressItem={id =>
               db.transaction(
                 tx => {
-                  tx.executeSql('update items set done = 1 where id = ?;', [id]);
+                  tx.executeSql('update list set done = 1 where id = ?;', [id]);
                 },
                 null,
-                forceUpdate
-              )
-            }
+                forceUpdate,
+              )}
           />
         </View>
         <Items
           done
           key={`forceupdate-done-${forceUpdateId}`}
+          itemId={itemId}
           onPressItem={id =>
             db.transaction(
               tx => {
-                tx.executeSql('update items set done = 0 where id = ?;', [id]);
+                tx.executeSql('update list set done = 0 where id = ?;', [id]);
               },
               null,
-              forceUpdate
-            )
-          }
+              forceUpdate,
+            )}
         />
         <TextInput
           style={styles.textInput}

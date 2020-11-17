@@ -6,50 +6,6 @@ import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabase('db');
 
-/*
-const listData = [
-  {
-    id: '1',
-    title: '抗酸化物質とは、抗酸化剤とも呼ばれ、生体内、食品、日用品、工業原料において酸素が関与する有害な反応を減弱もしくは除去する物質の総称である。',
-    icon: 'calendar',
-  },
-  {
-    id: '2',
-    title: 'Webサイトのコンテンツ管理システム(CMS)の種類の一つで、簡便な記法を用いて文書の整形や装飾が可能なもの。',
-    icon: '',
-  },
-  {
-    id: '3',
-    title: 'Truncate Title text such that the total number of lines does not exceed this number.',
-    icon: 'clock',
-  },
-  {
-    id: '4',
-    title: 'テスト',
-    icon: '',
-  },
-  {
-    id: '5',
-    title: 'テスト',
-    icon: '',
-  },
-  {
-    id: '6',
-    title: 'テスト',
-    icon: '',
-  },
-  {
-    id: '7',
-    title: 'テスト',
-    icon: '',
-  },
-  {
-    id: '8',
-    title: 'テスト',
-    icon: '',
-  },
-];
-*/
 
 const Items = ({ done: doneHeading, onPressItem }) => {
   const [items, setItems] = useState(null);
@@ -81,10 +37,12 @@ const Items = ({ done: doneHeading, onPressItem }) => {
           key={id}
           onPress={() => onPressItem && onPressItem(id)}
           style={{
-            backgroundColor: done ? "#1c9963" : "#fff",
-            borderColor: "#000",
-            borderWidth: 1,
-            padding: 8,
+            backgroundColor: done ? '#434343' : '#fff',
+            borderColor: '#ddd',
+            borderBottomWidth: 1,
+            height: 50,
+            paddingLeft: 20,
+            justifyContent: 'center',
           }}
         >
           <Text style={{ color: done ? "#fff" : "#000" }}>{value}</Text>
@@ -94,7 +52,7 @@ const Items = ({ done: doneHeading, onPressItem }) => {
   );
 };
 
-export default function HomeScreen() {
+export default function ListScreen() {
   const [text, setText] = useState('');
   const [forceUpdate, forceUpdateId] = useForceUpdate()
 
@@ -122,92 +80,53 @@ export default function HomeScreen() {
     );
   }
 
-  const deleteRow = (rowMap, rowKey) => {
-    const newData = [...listData];
-    const prevIndex = listData.findIndex(item => item.key === rowKey);
-    newData.splice(prevIndex, 1);
-    setListData(newData);
-  };
-
-  const renderItem = data => (
-    <List.Item
-      style={styles.rowFront}
-      title={data.item.text}
-      underlayColor="#AAA"
-    />
-  );
-
-  const renderHiddenItem = (data, rowMap) => (
-    <View style={styles.rowBack}>
-      <TouchableOpacity
-        style={[styles.backRightBtn, styles.backRightBtnLeft]}
-        onPress={() => closeRow(rowMap, data.item.key)}
-      >
-        <Image source={require('../../images/edit.png')} style={styles.edit} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.backRightBtn, styles.backRightBtnRight]}
-        onPress={() => deleteRow(rowMap, data.item.key)}
-      >
-        <Image source={require('../../images/trash.png')} style={styles.trash} />
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
-      <Appbar.Header style={styles.appbar}>
-        <Appbar.Content style={styles.appbarTitle} title="CheckList" />
-        <Appbar.Action icon="dots-horizontal" />
-      </Appbar.Header>
-      <TextInput
-        style={styles.textInput}
-        selectionColor="#fff"
-        theme={{ colors: { text: '#fff', primary: '#fff' }, roundness: 0 }}
-        placeholderTextColor="#fff"
-        placeholder="タスクを追加"
-        value={text}
-        onChangeText={text => setText(text)}
-        onSubmitEditing={() => {
-          add(text);
-          setText(null);
-        }}
-        left={<TextInput.Icon icon="plus-circle" color="#fff" />}
-      />
       <ScrollView style={styles.listArea}>
-        <Items
-          key={`forceupdate-todo-${forceUpdateId}`}
-          done={false}
-          onPressItem={id =>
-            db.transaction(
-              tx => {
-                tx.executeSql('update items set done = 1 where id = ?;', [
-                  id
-                ]);
-              },
-              null,
-              forceUpdate
-            )
-          }
-        />
+        <View style={styles.todoItems}>
+          <Items
+            key={`forceupdate-todo-${forceUpdateId}`}
+            done={false}
+            onPressItem={id =>
+              db.transaction(
+                tx => {
+                  tx.executeSql('update items set done = 1 where id = ?;', [id]);
+                },
+                null,
+                forceUpdate
+              )
+            }
+          />
+        </View>
         <Items
           done
           key={`forceupdate-done-${forceUpdateId}`}
           onPressItem={id =>
             db.transaction(
               tx => {
-                tx.executeSql('delete from items where id = ?;', [id]);
+                tx.executeSql('update items set done = 0 where id = ?;', [id]);
               },
               null,
               forceUpdate
             )
           }
         />
+        <TextInput
+          style={styles.textInput}
+          selectionColor="black"
+          theme={{ colors: { text: 'black', primary: '#fff' }, roundness: 0 }}
+          placeholderTextColor="#ddd"
+          placeholder="項目を追加"
+          value={text}
+          onChangeText={text => setText(text)}
+          onSubmitEditing={() => {
+            add(text);
+            setText(null);
+          }}
+          left={<TextInput.Icon icon="plus" color="#ddd" />}
+        />
       </ScrollView>
-      <Appbar style={styles.appbarbottom}>
-        <Appbar.Action style={styles.appbarbottomIcon} size={30} icon="home" onPress={() => console.log('Pressed archive')} />
-        <Appbar.Action style={styles.appbarbottomIcon} size={26} icon="magnify" onPress={() => console.log('Pressed archive')} />
-      </Appbar>
     </View>
   );
 }
@@ -223,27 +142,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#f2f2f7',
   },
-  appbar: {
-    backgroundColor: '#f8f8f8',
-  },
-  appbarTitle: {
-    alignItems: 'center',
-  },
-  appbarbottom: {
-    backgroundColor: '#f8f8f8',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 85,
-    justifyContent: 'center',
-  },
-  appbarbottomIcon: {
-    margin: 25,
-    bottom: 15,
+  sectionHeading: {
+    marginTop: 20,
+    marginLeft: 20,
+    marginBottom: 10,
   },
   textInput: {
-    backgroundColor: '#434343',
+    backgroundColor: '#fff',
     borderRadius: 0,
+    marginTop: 20,
   },
   rowFront: {
     alignItems: 'center',
@@ -261,29 +168,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingLeft: 15,
-  },
-  backRightBtn: {
-    alignItems: 'center',
-    bottom: 0,
-    justifyContent: 'center',
-    position: 'absolute',
-    top: 0,
-    width: 75,
-  },
-  backRightBtnLeft: {
-    backgroundColor: '#adadad',
-    right: 75,
-  },
-  backRightBtnRight: {
-    backgroundColor: '#FF312E',
-    right: 0,
-  },
-  edit: {
-    height: 25,
-    width: 25,
-  },
-  trash: {
-    height: 25,
-    width: 25,
   },
 });

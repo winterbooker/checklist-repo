@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Animated, TouchableOpacity, Text, ScrollView } from 'react-native';
-import { TextInput, Appbar, Button, Paragraph, Dialog, Portal, RadioButton } from 'react-native-paper';
-import { SwipeListView, SwipeRow } from 'react-native-swipe-list-view';
+import { TextInput, Appbar } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 
@@ -10,7 +9,7 @@ import Header from '../components/Appbar';
 const db = SQLite.openDatabase('db');
 
 
-const Items = () => {
+const Items = ({ navigation }) => {
   const [items, setItems] = useState(null);
 
   useEffect(() => {
@@ -54,7 +53,7 @@ const Items = () => {
           <TouchableOpacity
             style={styles.item}
             key={id}
-            onPress={() => console.log({ value })}
+            onPress={() => navigation.navigate('List')}
           >
             <Text>{value}</Text>
           </TouchableOpacity>
@@ -66,7 +65,7 @@ const Items = () => {
 
 
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [text, setText] = useState('');
   const [forceUpdate, forceUpdateId] = useForceUpdate();
 
@@ -102,7 +101,7 @@ export default function HomeScreen() {
           style={styles.textInput}
           selectionColor="#fff"
           theme={{ colors: { text: '#fff', primary: '#fff' }, roundness: 0 }}
-          placeholderTextColor="#fff"
+          placeholderTextColor="#ddd"
           placeholder="タスクを追加"
           value={text}
           onChangeText={text => setText(text)}
@@ -110,11 +109,12 @@ export default function HomeScreen() {
             add(text);
             setText(null);
           }}
-          left={<TextInput.Icon icon="plus-circle" color="#fff" />}
+          left={<TextInput.Icon icon="plus" color="#fff" />}
         />
         <ScrollView>
           <Items
             key={`forceupdate-todo-${forceUpdateId}`}
+            navigation={navigation}
           />
         </ScrollView>
       </View>
@@ -138,9 +138,6 @@ const styles = StyleSheet.create({
   },
   contents: {
     flex: 1,
-  },
-  appbarTitle: {
-    alignItems: 'center',
   },
   sectionContainer: {
     backgroundColor: '#fff',

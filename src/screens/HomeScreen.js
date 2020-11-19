@@ -31,6 +31,9 @@ const Items = ({ navigation }) => {
       tx.executeSql('delete from items where id = ?;', [id]);
     });
     db.transaction(tx => {
+      tx.executeSql('delete from list where listId = ?;', [id]);
+    });
+    db.transaction(tx => {
       tx.executeSql(
         'select * from items;',
         null,

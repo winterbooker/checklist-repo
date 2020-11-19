@@ -20,7 +20,7 @@ const Items = ({ done: doneHeading, onPressItem, itemId }) => {
     });
   }, []);
 
-  const heading = doneHeading ? 'Completed' : 'Todo';
+  // const heading = doneHeading ? 'Completed' : 'Todo';
 
   if (items === null || items.length === 0) {
     return null;
@@ -47,7 +47,6 @@ const Items = ({ done: doneHeading, onPressItem, itemId }) => {
 
   return (
     <ScrollView style={styles.sectionContainer}>
-      <Text style={styles.sectionHeading}>{heading}</Text>
       {items.map(({ id, done, value }) => (
         <View key={id}>
           <Swipeable style={styles.swipeItem} key={id} renderRightActions={() => rightSwipe(id)}>
@@ -173,11 +172,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     backgroundColor: '#f2f2f7',
-  },
-  sectionHeading: {
-    marginTop: 20,
-    marginLeft: 20,
-    marginBottom: 10,
   },
   textInput: {
     backgroundColor: '#fff',

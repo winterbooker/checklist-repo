@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { TextInput, RadioButton, List } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabase('db');
+const windowWidth = Dimensions.get('window').width;
 
 
 const Items = ({ done: doneHeading, onPressItem, itemId }) => {
@@ -80,6 +81,8 @@ const Items = ({ done: doneHeading, onPressItem, itemId }) => {
 
 export default function ListScreen({ route }) {
   const [text, setText] = useState('');
+  const [expanded, setExpanded] = useState(true);
+  const [value, setValue] = React.useState('first');
   const [forceUpdate, forceUpdateId] = useForceUpdate();
 
   const { itemId } = route.params;
@@ -110,6 +113,9 @@ export default function ListScreen({ route }) {
     forceUpdate
     );
   }
+
+  const handlePressOpen = () => setExpanded(!expanded);
+
 
 
   return (
@@ -157,6 +163,25 @@ export default function ListScreen({ route }) {
           }}
           left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
         />
+        <List.Accordion style={styles.settings} title="設定">
+          <View style={styles.schedule}>
+            <Text style={styles.radioButtonTitle}>スケジュール設定</Text>
+            <RadioButton.Group onValueChange={newValue => setValue(newValue)} value={value}>
+              <View style={styles.radioButton}>
+                <RadioButton.Android value="設定なし" />
+                <Text>設定なし</Text>
+              </View>
+              <View style={styles.radioButton}>
+                <RadioButton.Android value="スケジュールを指定（1度のみ）" />
+                <Text>スケジュールを指定（1度のみ）</Text>
+              </View>
+              <View style={styles.radioButton}>
+                <RadioButton.Android value="スケジュールを指定（繰り返し）" />
+                <Text>スケジュールを指定（繰り返し）</Text>
+              </View>
+            </RadioButton.Group>
+          </View>
+        </List.Accordion>
       </ScrollView>
     </View>
   );
@@ -208,5 +233,22 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: '#fff',
+  },
+  settings: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: windowWidth / 2.5,
+  },
+  schedule: {
+    margin: 20,
+  },
+  radioButtonTitle: {
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 10,
   },
 });

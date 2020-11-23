@@ -80,12 +80,10 @@ const Items = ({ done: doneHeading, onPressItem, itemId }) => {
 };
 
 export default function ListScreen({ route }) {
+  const { id, itemId, schedule } = route.params;
   const [text, setText] = useState('');
-  const [expanded, setExpanded] = useState(true);
-  const [value, setValue] = React.useState('first');
   const [forceUpdate, forceUpdateId] = useForceUpdate();
-
-  const { itemId } = route.params;
+  const [checked, setChecked] = useState(schedule);
 
   useEffect(() => {
     db.transaction(tx => {
@@ -114,9 +112,46 @@ export default function ListScreen({ route }) {
     );
   }
 
-  const handlePressOpen = () => setExpanded(!expanded);
 
+  const firstButton = () => {
+    setChecked(null);
 
+    db.transaction(tx => {
+      tx.executeSql('update items set schedule = null where id = ?', [id]);
+      tx.executeSql('select * from items where id = ?', [id], (_, { rows }) =>
+        console.log(JSON.stringify(rows))
+      );
+    },
+    null,
+    forceUpdate,
+    );
+  }
+
+  const secondButton = () => {
+    setChecked('calendar');
+    db.transaction(tx => {
+      tx.executeSql('update items set schedule = "calendar" where id = ?', [id]);
+      tx.executeSql('select * from items where id = ?', [id], (_, { rows }) =>
+        console.log(JSON.stringify(rows))
+      );
+    },
+    null,
+    forceUpdate,
+    );
+  }
+
+  const thirdButton = () => {
+    setChecked('clock');
+    db.transaction(tx => {
+      tx.executeSql('update items set schedule = "clock" where id = ?', [id]);
+      tx.executeSql('select * from items where id = ?', [id], (_, { rows }) =>
+        console.log(JSON.stringify(rows))
+      );
+    },
+    null,
+    forceUpdate,
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -164,22 +199,23 @@ export default function ListScreen({ route }) {
           left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
         />
         <List.Accordion style={styles.settings} title="設定">
+          <View style={styles.tag}>
+            <Text style={styles.tagTitle}>タグを設定</Text>
+          </View>
           <View style={styles.schedule}>
             <Text style={styles.radioButtonTitle}>スケジュール設定</Text>
-            <RadioButton.Group onValueChange={newValue => setValue(newValue)} value={value}>
               <View style={styles.radioButton}>
-                <RadioButton.Android value="設定なし" />
+                <RadioButton.Android value="設定なし" status={checked === null ? 'checked' : 'unchecked'} onPress={() => firstButton()} />
                 <Text>設定なし</Text>
               </View>
               <View style={styles.radioButton}>
-                <RadioButton.Android value="スケジュールを指定（1度のみ）" />
+                <RadioButton.Android value="スケジュールを指定（1度のみ）" status={checked === 'calendar' ? 'checked' : 'unchecked'} onPress={() => secondButton()} />
                 <Text>スケジュールを指定（1度のみ）</Text>
               </View>
               <View style={styles.radioButton}>
-                <RadioButton.Android value="スケジュールを指定（繰り返し）" />
+                <RadioButton.Android value="スケジュールを指定（繰り返し）" status={checked === 'clock' ? 'checked' : 'unchecked'} onPress={() => thirdButton()} />
                 <Text>スケジュールを指定（繰り返し）</Text>
               </View>
-            </RadioButton.Group>
           </View>
         </List.Accordion>
       </ScrollView>
@@ -233,6 +269,12 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: '#fff',
+  },
+  tag: {
+    margin: 20,
+  },
+  tagTitle: {
+    fontWeight: 'bold',
   },
   settings: {
     alignItems: 'center',

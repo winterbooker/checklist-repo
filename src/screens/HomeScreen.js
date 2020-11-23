@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image } from 'react-native';
 import { TextInput, Appbar } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
@@ -49,16 +49,50 @@ const Items = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+
+  const renderSwitch = (value, schedule) => {
+    switch (schedule) {
+      case null:
+        return (
+          <View style={styles.swipeItems}>
+            <Image style={styles.swipeItemIcon} source={require('../../images/none.png')} />
+            <Text>{value}</Text>
+          </View>
+        );
+      case 'calendar':
+        return (
+          <View style={styles.swipeItems}>
+            <Image style={styles.swipeItemIcon} source={require('../../images/calendar.png')} />
+            <Text>{value}</Text>
+          </View>
+        );
+      case 'clock':
+        return (
+          <View style={styles.swipeItems}>
+            <Image style={styles.swipeItemIcon} source={require('../../images/clock.png')} />
+            <Text>{value}</Text>
+          </View>
+        );
+      default:
+        return (
+          <View style={styles.swipeItems}>
+            <Text>{value}</Text>
+          </View>
+        );
+    }
+  };
+
+
   return (
     <ScrollView style={styles.sectionContainer}>
-      {items.map(({ id, value }) => (
-        <Swipeable style={styles.swipeItem} key={id} renderRightActions={() => rightSwipe(id)}>
+      {items.map(({ id, value, schedule }) => (
+        <Swipeable style={styles.swipeContainer} key={id} renderRightActions={() => rightSwipe(id)}>
           <TouchableOpacity
             style={styles.item}
             key={id}
-            onPress={() => navigation.navigate('List', { itemId: id })}
+            onPress={() => navigation.navigate('List', { id, itemId: id, schedule })}
           >
-            <Text>{value}</Text>
+            {renderSwitch(value, schedule)}
           </TouchableOpacity>
         </Swipeable>
       ))}
@@ -75,8 +109,11 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     db.transaction(tx => {
       tx.executeSql(
-        'create table if not exists items (id integer primary key not null, done int, value text);',
+        'create table if not exists items (id integer primary key not null, done int, value text, schedule text);',
       );
+      // tx.executeSql(
+      // 'drop table items;',
+      // );
     });
   }, []);
 
@@ -209,10 +246,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 20,
   },
-  rightSwipeItem: {
+  swipeContainer: {
     flex: 1,
     justifyContent: 'center',
     paddingLeft: 20,
+  },
+  swipeItems: {
+    flexDirection: 'row',
+  },
+  swipeItemIcon: {
+    marginRight: 10,
+    width: 15,
+    height: 15,
   },
   deleteBox: {
     alignItems: 'center',

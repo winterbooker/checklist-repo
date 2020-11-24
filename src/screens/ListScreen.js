@@ -14,8 +14,8 @@ const Items = ({ done: doneHeading, onPressItem, itemId }) => {
   useEffect(() => {
     db.transaction(tx => {
       tx.executeSql(
-        'select * from list where done = ? and listId = ?;',
-        [doneHeading ? 1 : 0, itemId],
+        'select * from list where listId = ?;',
+        [itemId],
         (_, { rows: { _array } }) => setItems(_array),
       );
     });
@@ -164,26 +164,13 @@ export default function ListScreen({ route }) {
             onPressItem={id =>
               db.transaction(
                 tx => {
-                  tx.executeSql('update list set done = 1 where id = ?;', [id]);
+                  tx.executeSql('update list set done = case when done = 1 then 0 when done = 0 then 1 else 0 end where id = ?;', [id]);
                 },
                 null,
                 forceUpdate,
               )}
           />
         </View>
-        <Items
-          done
-          key={`forceupdate-done-${forceUpdateId}`}
-          itemId={itemId}
-          onPressItem={id =>
-            db.transaction(
-              tx => {
-                tx.executeSql('update list set done = 0 where id = ?;', [id]);
-              },
-              null,
-              forceUpdate,
-            )}
-        />
         <TextInput
           style={styles.textInput}
           selectionColor="black"

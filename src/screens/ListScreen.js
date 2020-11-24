@@ -189,7 +189,7 @@ export default function ListScreen({ route }) {
           selectionColor="black"
           theme={{ colors: { text: 'black', primary: '#fff' }, roundness: 0 }}
           placeholderTextColor="#8d8d8f"
-          placeholder="項目を追加"
+          placeholder="サブタスクを追加"
           value={text}
           onChangeText={text => setText(text)}
           onSubmitEditing={() => {
@@ -199,9 +199,6 @@ export default function ListScreen({ route }) {
           left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
         />
         <List.Accordion style={styles.settings} title="設定">
-          <View style={styles.tag}>
-            <Text style={styles.tagTitle}>タグを設定</Text>
-          </View>
           <View style={styles.schedule}>
             <Text style={styles.radioButtonTitle}>スケジュール設定</Text>
               <View style={styles.radioButton}>
@@ -269,12 +266,6 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: '#fff',
-  },
-  tag: {
-    margin: 20,
-  },
-  tagTitle: {
-    fontWeight: 'bold',
   },
   settings: {
     alignItems: 'center',

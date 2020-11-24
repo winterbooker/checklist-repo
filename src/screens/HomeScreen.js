@@ -56,27 +56,27 @@ const Items = ({ navigation }) => {
         return (
           <View style={styles.swipeItems}>
             <Image style={styles.swipeItemIcon} source={require('../../images/none.png')} />
-            <Text>{value}</Text>
+            <Text style={styles.swipeTitle}>{value}</Text>
           </View>
         );
       case 'calendar':
         return (
           <View style={styles.swipeItems}>
             <Image style={styles.swipeItemIcon} source={require('../../images/calendar.png')} />
-            <Text>{value}</Text>
+            <Text style={styles.swipeTitle}>{value}</Text>
           </View>
         );
       case 'clock':
         return (
           <View style={styles.swipeItems}>
-            <Image style={styles.swipeItemIcon} source={require('../../images/clock.png')} />
-            <Text>{value}</Text>
+            <Image style={styles.swipeItemIcon} source={require('../../images/loop.png')} />
+            <Text style={styles.swipeTitle} numberOfLines={2}>{value}</Text>
           </View>
         );
       default:
         return (
           <View style={styles.swipeItems}>
-            <Text>{value}</Text>
+            <Text style={styles.swipeTitle}>{value}</Text>
           </View>
         );
     }
@@ -158,10 +158,6 @@ export default function HomeScreen({ navigation }) {
           />
         </ScrollView>
       </View>
-      <Appbar style={styles.appbarbottom}>
-        <Appbar.Action style={styles.appbarbottomIcon} size={30} icon="home" onPress={() => console.log('Pressed archive')} />
-        <Appbar.Action style={styles.appbarbottomIcon} size={26} icon="magnify" onPress={() => console.log('Pressed archive')} />
-      </Appbar>
     </View>
   );
 }
@@ -240,24 +236,32 @@ const styles = StyleSheet.create({
     width: 25,
   },
   item: {
-    height: 50,
+    height: 65,
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
     justifyContent: 'center',
     paddingLeft: 20,
+    paddingTop: 10,
+    paddingRight: 20,
+    paddingBottom: 10,
   },
   swipeContainer: {
     flex: 1,
     justifyContent: 'center',
-    paddingLeft: 20,
+    alignItems: 'center',
   },
   swipeItems: {
     flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 30,
   },
   swipeItemIcon: {
-    marginRight: 10,
+    marginRight: 15,
     width: 15,
     height: 15,
+  },
+  swipeTitle: {
+    fontSize: 15,
   },
   deleteBox: {
     alignItems: 'center',

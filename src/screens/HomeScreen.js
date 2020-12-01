@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image } from 'react-native';
-import { TextInput, Appbar } from 'react-native-paper';
+import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions } from 'react-native';
+import { TextInput, Modal, Portal, Button, Provider } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
-
 import Header from '../components/Appbar';
 
+
+
 const db = SQLite.openDatabase('db');
+const windowHeight = Dimensions.get('window').height;
+const windowWidth = Dimensions.get('window').width;
+
 
 
 const Items = ({ navigation }) => {
   const [items, setItems] = useState(null);
+  const [text, setText] = useState('');
+  const [textModal, setTextModal] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalIndex, setModalIndex] = useState(0);
+  const [listName, setListName] = useState('');
+
 
   useEffect(() => {
     db.transaction(tx => {
@@ -22,9 +32,11 @@ const Items = ({ navigation }) => {
     });
   }, []);
 
+
   if (items === null || items.length === 0) {
     return null;
   }
+
 
   const handleDelete = (id) => {
     db.transaction(tx => {
@@ -83,29 +95,106 @@ const Items = ({ navigation }) => {
   };
 
 
+  const add = (text) => {
+    if (text === null || text === '') {
+      return false;
+    }
+
+    db.transaction(tx => {
+      tx.executeSql('insert into items (done, value) values (0, ?)', [text]);
+      tx.executeSql(
+        'select * from items;',
+        null,
+        (_, { rows: { _array } }) => setItems(_array),
+      );
+      tx.executeSql('select * from items', [], (_, { rows }) =>
+        console.log(JSON.stringify(rows)));
+    },
+    null,
+    );
+  };
+
+
+  const addModal = (textModal, modalIndex) => {
+    if (textModal === null || textModal === '') {
+      return false;
+    }
+
+    db.transaction(tx => {
+      tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
+      tx.executeSql(
+        'select * from items;',
+        null,
+        (_, { rows: { _array } }) => setItems(_array),
+      );
+      tx.executeSql('select * from items', [], (_, { rows }) =>
+        console.log(JSON.stringify(rows)));
+    },
+    null,
+    );
+  };
+
+
   return (
-    <ScrollView style={styles.sectionContainer}>
+    <View style={styles.sectionContainer}>
+      <TextInput
+        style={styles.textInput}
+        selectionColor="#fff"
+        theme={{ colors: { text: '#fff', primary: '#fff' }, roundness: 0 }}
+        placeholderTextColor="#ddd"
+        placeholder="タスクを追加"
+        value={text}
+        onChangeText={text => setText(text)}
+        onSubmitEditing={() => {
+          add(text);
+          setText(null);
+        }}
+        left={<TextInput.Icon icon="plus" color="#fff" />}
+      />
       {items.map(({ id, value, schedule }) => (
-        <Swipeable style={styles.swipeContainer} key={id} renderRightActions={() => rightSwipe(id)}>
-          <TouchableOpacity
-            style={styles.item}
-            key={id}
-            onPress={() => navigation.navigate('List', { id, itemId: id, schedule })}
-          >
-            {renderSwitch(value, schedule)}
-          </TouchableOpacity>
-        </Swipeable>
+        <View key={id}>
+          <Swipeable renderRightActions={() => rightSwipe(id)}>
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => navigation.navigate('サブタスク', { id, itemId: id, schedule })}
+              onLongPress={() => {
+                setModalIndex(id);
+                setModalVisible(true);
+                setListName(value);
+              }}
+            >
+              {renderSwitch(value, schedule)}
+            </TouchableOpacity>
+          </Swipeable>
+        </View>
       ))}
-    </ScrollView>
+      <Modal animationType="slide" transparent={true} visible={modalVisible} style={styles.modal} onDismiss={() => { setModalVisible(!modalVisible); }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <TextInput
+              style={styles.textInputModal}
+              selectionColor="#000"
+              theme={{ roundness: 0 }}
+              placeholderTextColor="#B8B8B8"
+              placeholder={listName}
+              value={textModal}
+              onChangeText={textModal => setTextModal(textModal)}
+              onSubmitEditing={() => {
+                addModal(textModal, modalIndex);
+                setTextModal(null);
+                setModalVisible(!modalVisible);
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 
 
-export default function HomeScreen({ navigation }) {
-  const [text, setText] = useState('');
-  const [forceUpdate, forceUpdateId] = useForceUpdate();
-
+export default function HomeScreen({ navigation, id }) {
   useEffect(() => {
     db.transaction(tx => {
       tx.executeSql(
@@ -117,43 +206,14 @@ export default function HomeScreen({ navigation }) {
     });
   }, []);
 
-  const add = (text) => {
-    if (text === null || text === '') {
-      return false;
-    }
-
-    db.transaction(tx => {
-      tx.executeSql('insert into items (done, value) values (0, ?)', [text]);
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
-    },
-    null,
-    forceUpdate,
-    );
-  };
 
 
   return (
     <View style={styles.container}>
-      <Header />
       <View style={styles.contents}>
-        <TextInput
-          style={styles.textInput}
-          selectionColor="#fff"
-          theme={{ colors: { text: '#fff', primary: '#fff' }, roundness: 0 }}
-          placeholderTextColor="#ddd"
-          placeholder="タスクを追加"
-          value={text}
-          onChangeText={text => setText(text)}
-          onSubmitEditing={() => {
-            add(text);
-            setText(null);
-          }}
-          left={<TextInput.Icon icon="plus" color="#fff" />}
-        />
-        <ScrollView>
+        <ScrollView style={styles.itemcontainer}>
           <Items
-            key={`forceupdate-todo-${forceUpdateId}`}
+            key={id}
             navigation={navigation}
           />
         </ScrollView>
@@ -162,10 +222,6 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-function useForceUpdate() {
-  const [value, setValue] = useState(0);
-  return [() => setValue(value + 1), value];
-}
 
 const styles = StyleSheet.create({
   container: {
@@ -175,65 +231,16 @@ const styles = StyleSheet.create({
   contents: {
     flex: 1,
   },
+  itemcontainer: {
+    height: windowHeight,
+  },
   sectionContainer: {
     backgroundColor: '#fff',
-  },
-  appbarbottom: {
-    backgroundColor: '#f8f8f8',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 85,
-    justifyContent: 'center',
-  },
-  appbarbottomIcon: {
-    margin: 25,
-    bottom: 15,
+    height: windowHeight,
   },
   textInput: {
     backgroundColor: '#434343',
     borderRadius: 0,
-  },
-  rowFront: {
-    alignItems: 'center',
-    backgroundColor: '#CCC',
-    justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: 'black',
-    height: 50,
-    paddingLeft: 40,
-  },
-  rowBack: {
-    alignItems: 'center',
-    backgroundColor: '#DDD',
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingLeft: 15,
-  },
-  backRightBtn: {
-    alignItems: 'center',
-    bottom: 0,
-    justifyContent: 'center',
-    position: 'absolute',
-    top: 0,
-    width: 75,
-  },
-  backRightBtnLeft: {
-    backgroundColor: '#adadad',
-    right: 75,
-  },
-  backRightBtnRight: {
-    backgroundColor: '#FF312E',
-    right: 0,
-  },
-  edit: {
-    height: 25,
-    width: 25,
-  },
-  trash: {
-    height: 25,
-    width: 25,
   },
   item: {
     height: 65,
@@ -244,11 +251,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingRight: 20,
     paddingBottom: 10,
-  },
-  swipeContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   swipeItems: {
     flexDirection: 'row',
@@ -262,6 +264,8 @@ const styles = StyleSheet.create({
   },
   swipeTitle: {
     fontSize: 15,
+    fontWeight: 'bold',
+    color: '#141414',
   },
   deleteBox: {
     alignItems: 'center',
@@ -271,5 +275,47 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: '#fff',
+  },
+  centeredView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    borderRadius: 20,
+    backgroundColor: '#ddd',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    height: windowHeight * 0.2,
+    width: windowWidth * 0.8,
+  },
+  textInputModal: {
+    width: 200,
+  },
+  openButton: {
+    backgroundColor: '#F194FF',
+    borderRadius: 20,
+    padding: 20,
+    elevation: 2,
+    marginTop: 20,
+  },
+  textStyle: {
+    color: 'black',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 20,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modal: {
+    zIndex: 20,
   },
 });

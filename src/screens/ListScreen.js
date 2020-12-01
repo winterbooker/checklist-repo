@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions, Button, LayoutAnimation } from 'react-native';
 import { TextInput, RadioButton, List } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
+import * as Notifications from 'expo-notifications';
+
 
 const db = SQLite.openDatabase('db');
 const windowWidth = Dimensions.get('window').width;
 
 
-const Items = ({ done: doneHeading, onPressItem, itemId }) => {
+const Items = ({ onPressItem, itemId }) => {
   const [items, setItems] = useState(null);
 
   useEffect(() => {
@@ -27,30 +29,30 @@ const Items = ({ done: doneHeading, onPressItem, itemId }) => {
     return null;
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = (id, listId) => {
     db.transaction(tx => {
       tx.executeSql('delete from list where id = ?;', [id]);
     });
     db.transaction(tx => {
       tx.executeSql(
-        'select * from list;',
-        null,
+        'select * from list where listId = ?;',
+        [listId],
         (_, { rows: { _array } }) => setItems(_array),
       );
     });
   };
 
-  const rightSwipe = (id) => (
-    <TouchableOpacity style={styles.deleteBox} onPress={() => handleDelete(id)}>
+  const rightSwipe = (id, listId) => (
+    <TouchableOpacity style={styles.deleteBox} onPress={() => handleDelete(id, listId)}>
       <Text style={styles.deleteText}>削除</Text>
     </TouchableOpacity>
   );
 
   return (
     <ScrollView style={styles.sectionContainer}>
-      {items.map(({ id, done, value }) => (
+      {items.map(({ id, done, value, listId }) => (
         <View key={id}>
-          <Swipeable style={styles.swipeItem} key={id} renderRightActions={() => rightSwipe(id)}>
+          <Swipeable style={styles.swipeItem} key={id} renderRightActions={() => rightSwipe(id, listId)}>
             <TouchableOpacity
               key={id}
               onPress={() => onPressItem && onPressItem(id)}
@@ -85,7 +87,10 @@ export default function ListScreen({ route }) {
   const [forceUpdate, forceUpdateId] = useForceUpdate();
   const [checked, setChecked] = useState(schedule);
 
+
   useEffect(() => {
+    requestPermissionsAsync();
+
     db.transaction(tx => {
       tx.executeSql(
         'create table if not exists list (id integer primary key not null, done int, value text, listId integer);'
@@ -100,6 +105,8 @@ export default function ListScreen({ route }) {
     if (text === null || text === "") {
       return false;
     }
+
+    LayoutAnimation.easeInEaseOut();
 
     db.transaction(tx => {
       tx.executeSql('insert into list (done, value, listId) values (0, ?, ?)', [text, itemId]);
@@ -151,7 +158,8 @@ export default function ListScreen({ route }) {
     null,
     forceUpdate,
     );
-  }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -168,6 +176,7 @@ export default function ListScreen({ route }) {
                 },
                 null,
                 forceUpdate,
+                LayoutAnimation.configureNext(LayoutAnimation.create(200, LayoutAnimation.Types.easeInEaseOut, LayoutAnimation.Properties.opacity)),
               )}
           />
         </View>
@@ -206,6 +215,27 @@ export default function ListScreen({ route }) {
     </View>
   );
 }
+
+const requestPermissionsAsync = async () => {
+  const { granted } = await Notifications.getPermissionsAsync();
+  if (granted) { return }
+
+  await Notifications.requestPermissionsAsync();
+};
+
+const scheduleNotificationAsync = async () => {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'checklist',
+      body: 'test',
+    },
+    trigger: {
+      hour: 13,
+      minute: 44,
+      repeats: true,
+    },
+  });
+};
 
 function useForceUpdate() {
   const [value, setValue] = useState(0);

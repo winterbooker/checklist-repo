@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions, Animated } from 'react-native';
 import { TextInput, Modal, Portal, Button, Provider } from 'react-native-paper';
+import { KeyboardAwareView } from 'react-native-keyboard-aware-view';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
+
 import Header from '../components/Appbar';
 
 
@@ -10,7 +12,6 @@ import Header from '../components/Appbar';
 const db = SQLite.openDatabase('db');
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
-
 
 
 const Items = ({ navigation }) => {
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     backgroundColor: '#fff',
-    height: windowHeight,
+    height: windowHeight * 0.9,
   },
   textInput: {
     backgroundColor: '#434343',
@@ -244,6 +245,7 @@ const styles = StyleSheet.create({
   },
   item: {
     height: 65,
+    backgroundColor: '#fff',
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
     justifyContent: 'center',
@@ -277,7 +279,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   centeredView: {
-    justifyContent: 'center',
     alignItems: 'center',
   },
   modalView: {
@@ -309,13 +310,5 @@ const styles = StyleSheet.create({
     color: 'black',
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  modalText: {
-    fontSize: 20,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  modal: {
-    zIndex: 20,
   },
 });

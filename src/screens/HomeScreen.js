@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions, Animated } from 'react-native';
-import { TextInput, Modal, Portal, Button, Provider } from 'react-native-paper';
-import { KeyboardAwareView } from 'react-native-keyboard-aware-view';
+import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions, Animated, KeyboardAvoidingView, Platform } from 'react-native';
+import { TextInput, Modal } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
-
-import Header from '../components/Appbar';
-
 
 
 const db = SQLite.openDatabase('db');
@@ -16,7 +12,6 @@ const windowWidth = Dimensions.get('window').width;
 
 const Items = ({ navigation }) => {
   const [items, setItems] = useState(null);
-  const [text, setText] = useState('');
   const [textModal, setTextModal] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
@@ -96,26 +91,6 @@ const Items = ({ navigation }) => {
   };
 
 
-  const add = (text) => {
-    if (text === null || text === '') {
-      return false;
-    }
-
-    db.transaction(tx => {
-      tx.executeSql('insert into items (done, value) values (0, ?)', [text]);
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
-    },
-    null,
-    );
-  };
-
-
   const addModal = (textModal, modalIndex) => {
     if (textModal === null || textModal === '') {
       return false;
@@ -137,21 +112,7 @@ const Items = ({ navigation }) => {
 
 
   return (
-    <View style={styles.sectionContainer}>
-      <TextInput
-        style={styles.textInput}
-        selectionColor="#fff"
-        theme={{ colors: { text: '#fff', primary: '#fff' }, roundness: 0 }}
-        placeholderTextColor="#ddd"
-        placeholder="タスクを追加"
-        value={text}
-        onChangeText={text => setText(text)}
-        onSubmitEditing={() => {
-          add(text);
-          setText(null);
-        }}
-        left={<TextInput.Icon icon="plus" color="#fff" />}
-      />
+    <KeyboardAvoidingView style={styles.sectionContainer} behavior="height">
       {items.map(({ id, value, schedule }) => (
         <View key={id}>
           <Swipeable renderRightActions={() => rightSwipe(id)}>
@@ -189,13 +150,18 @@ const Items = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 
 
 export default function HomeScreen({ navigation, id }) {
+  const [text, setText] = useState('');
+  const [items, setItems] = useState(null);
+  const [forceUpdate, forceUpdateId] = useForceUpdate();
+
+
   useEffect(() => {
     db.transaction(tx => {
       tx.executeSql(
@@ -208,19 +174,57 @@ export default function HomeScreen({ navigation, id }) {
   }, []);
 
 
+  const add = (text) => {
+    if (text === null || text === '') {
+      return false;
+    }
+
+    db.transaction(tx => {
+      tx.executeSql('insert into items (done, value) values (0, ?)', [text]);
+      tx.executeSql(
+        'select * from items;',
+        null,
+        (_, { rows: { _array } }) => setItems(_array),
+      );
+      tx.executeSql('select * from items', [], (_, { rows }) =>
+        console.log(JSON.stringify(rows)));
+    },
+    null,
+    forceUpdate
+    );
+  };
+
+
 
   return (
     <View style={styles.container}>
-      <View style={styles.contents}>
-        <ScrollView style={styles.itemcontainer}>
-          <Items
-            key={id}
-            navigation={navigation}
-          />
-        </ScrollView>
-      </View>
+      <ScrollView style={styles.contents}>
+        <TextInput
+          style={styles.textInput}
+          selectionColor="#fff"
+          theme={{ colors: { text: '#fff', primary: '#fff' }, roundness: 0 }}
+          placeholderTextColor="#ddd"
+          placeholder="タスクを追加"
+          value={text}
+          onChangeText={text => setText(text)}
+          onSubmitEditing={() => {
+            add(text);
+            setText(null);
+          }}
+          left={<TextInput.Icon icon="plus" color="#ddd" />}
+        />
+        <Items
+          key={forceUpdateId}
+          navigation={navigation}
+        />
+      </ScrollView>
     </View>
   );
+}
+
+function useForceUpdate() {
+  const [value, setValue] = useState(0);
+  return [() => setValue(value + 1), value];
 }
 
 
@@ -232,12 +236,9 @@ const styles = StyleSheet.create({
   contents: {
     flex: 1,
   },
-  itemcontainer: {
-    height: windowHeight,
-  },
   sectionContainer: {
     backgroundColor: '#fff',
-    height: windowHeight * 0.9,
+    flex: 1,
   },
   textInput: {
     backgroundColor: '#434343',
@@ -280,8 +281,11 @@ const styles = StyleSheet.create({
   },
   centeredView: {
     alignItems: 'center',
+    flex: 1,
   },
   modalView: {
+    height: windowHeight * 0.2,
+    width: windowWidth * 0.8,
     borderRadius: 20,
     backgroundColor: '#ddd',
     alignItems: 'center',
@@ -293,8 +297,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    height: windowHeight * 0.2,
-    width: windowWidth * 0.8,
   },
   textInputModal: {
     width: 200,

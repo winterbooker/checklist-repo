@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions, Animated, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Modal } from 'react-native-paper';
+import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions, SafeAreaView, Animated } from 'react-native';
+import { TextInput, Modal, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 
@@ -112,7 +112,7 @@ const Items = ({ navigation }) => {
 
 
   return (
-    <KeyboardAvoidingView style={styles.sectionContainer} behavior="height">
+    <View style={styles.sectionContainer}>
       {items.map(({ id, value, schedule }) => (
         <View key={id}>
           <Swipeable renderRightActions={() => rightSwipe(id)}>
@@ -130,7 +130,7 @@ const Items = ({ navigation }) => {
           </Swipeable>
         </View>
       ))}
-      <Modal animationType="slide" transparent={true} visible={modalVisible} style={styles.modal} onDismiss={() => { setModalVisible(!modalVisible); }}>
+      <Modal animationType="slide" transparent={true} visible={modalVisible} style={styles.modal}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <TextInput
@@ -147,19 +147,31 @@ const Items = ({ navigation }) => {
                 setModalVisible(!modalVisible);
               }}
             />
+            <Button style={styles.modalButton} mode="contained" color="#B8B8B8" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
 
 
-export default function HomeScreen({ navigation, id }) {
+export default function HomeScreen({ navigation }) {
   const [text, setText] = useState('');
   const [items, setItems] = useState(null);
   const [forceUpdate, forceUpdateId] = useForceUpdate();
+
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  Animated.timing(
+    slideAnim,
+    {
+      toValue: 1,
+      duration: 5000,
+      useNativeDriver: true,
+    },
+  ).start();
 
 
   useEffect(() => {
@@ -190,10 +202,9 @@ export default function HomeScreen({ navigation, id }) {
         console.log(JSON.stringify(rows)));
     },
     null,
-    forceUpdate
+    forceUpdate,
     );
   };
-
 
 
   return (
@@ -218,9 +229,11 @@ export default function HomeScreen({ navigation, id }) {
           navigation={navigation}
         />
       </ScrollView>
+      <SafeAreaView />
     </View>
   );
 }
+
 
 function useForceUpdate() {
   const [value, setValue] = useState(0);
@@ -280,11 +293,12 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   centeredView: {
-    alignItems: 'center',
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalView: {
-    height: windowHeight * 0.2,
+    height: windowHeight * 0.3,
     width: windowWidth * 0.8,
     borderRadius: 20,
     backgroundColor: '#ddd',
@@ -299,18 +313,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   textInputModal: {
-    width: 200,
+    width: 250,
   },
-  openButton: {
-    backgroundColor: '#F194FF',
-    borderRadius: 20,
-    padding: 20,
-    elevation: 2,
-    marginTop: 20,
-  },
-  textStyle: {
-    color: 'black',
-    fontWeight: 'bold',
-    textAlign: 'center',
+  modalButton: {
+    marginTop: 30,
   },
 });

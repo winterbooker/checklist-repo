@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions, SafeAreaView, Animated } from 'react-native';
-import { TextInput, Modal, Button } from 'react-native-paper';
+import { StyleSheet, View, TouchableOpacity, Text, ScrollView, Image, Dimensions, SafeAreaView, Animated, Modal, LayoutAnimation } from 'react-native';
+import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 
@@ -17,6 +17,7 @@ const Items = ({ navigation }) => {
   const [modalIndex, setModalIndex] = useState(0);
   const [listName, setListName] = useState('');
 
+  LayoutAnimation.easeInEaseOut();
 
   useEffect(() => {
     db.transaction(tx => {
@@ -69,16 +70,22 @@ const Items = ({ navigation }) => {
         );
       case 'calendar':
         return (
-          <View style={styles.swipeItems}>
-            <Image style={styles.swipeItemIcon} source={require('../../images/calendar.png')} />
-            <Text style={styles.swipeTitle}>{value}</Text>
+          <View>
+            <View style={styles.swipeItems}>
+              <Image style={styles.swipeItemIcon} source={require('../../images/calendar.png')} />
+              <Text style={styles.swipeTitle}>{value}</Text>
+            </View>
+            <Text style={{ marginLeft: 30, marginTop: 5, color: '#999' }}>2020-12-30　21時</Text>
           </View>
         );
       case 'clock':
         return (
-          <View style={styles.swipeItems}>
-            <Image style={styles.swipeItemIcon} source={require('../../images/loop.png')} />
-            <Text style={styles.swipeTitle} numberOfLines={2}>{value}</Text>
+          <View>
+            <View style={styles.swipeItems}>
+              <Image style={styles.swipeItemIcon} source={require('../../images/loop.png')} />
+              <Text style={styles.swipeTitle} numberOfLines={2}>{value}</Text>
+            </View>
+            <Text style={{ marginLeft: 30, marginTop: 5, color: '#999' }}>毎火曜日　8時</Text>
           </View>
         );
       default:
@@ -130,7 +137,7 @@ const Items = ({ navigation }) => {
           </Swipeable>
         </View>
       ))}
-      <Modal animationType="slide" transparent={true} visible={modalVisible} style={styles.modal}>
+      <Modal animationType="fade" transparent={true} visible={modalVisible} style={styles.modal}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <TextInput
@@ -296,11 +303,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
     height: windowHeight * 0.3,
     width: windowWidth * 0.8,
-    borderRadius: 20,
+    borderRadius: 5,
     backgroundColor: '#ddd',
     alignItems: 'center',
     justifyContent: 'center',

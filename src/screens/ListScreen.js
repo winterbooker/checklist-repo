@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions, Button, LayoutAnimation } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions, LayoutAnimation } from 'react-native';
 import { TextInput, RadioButton, List } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
@@ -10,8 +10,10 @@ const db = SQLite.openDatabase('db');
 const windowWidth = Dimensions.get('window').width;
 
 
-const Items = ({ onPressItem, itemId }) => {
+const Items = ({ itemId }) => {
   const [items, setItems] = useState(null);
+
+  LayoutAnimation.easeInEaseOut();
 
   useEffect(() => {
     db.transaction(tx => {
@@ -23,7 +25,6 @@ const Items = ({ onPressItem, itemId }) => {
     });
   }, []);
 
-  // const heading = doneHeading ? 'Completed' : 'Todo';
 
   if (items === null || items.length === 0) {
     return null;
@@ -42,20 +43,36 @@ const Items = ({ onPressItem, itemId }) => {
     });
   };
 
+
   const rightSwipe = (id, listId) => (
     <TouchableOpacity style={styles.deleteBox} onPress={() => handleDelete(id, listId)}>
       <Text style={styles.deleteText}>削除</Text>
     </TouchableOpacity>
   );
 
+
+  const check = (id) => {
+    db.transaction(
+      tx => {
+        tx.executeSql('update list set done = case when done = 1 then 0 when done = 0 then 1 else 0 end where id = ?;', [id]);
+        tx.executeSql(
+          'select * from list where listId = ?;',
+          [itemId],
+          (_, { rows: { _array } }) => setItems(_array),
+        );
+      },
+      null,
+    );
+  };
+
+
   return (
     <ScrollView style={styles.sectionContainer}>
       {items.map(({ id, done, value, listId }) => (
         <View key={id}>
-          <Swipeable style={styles.swipeItem} key={id} renderRightActions={() => rightSwipe(id, listId)}>
+          <Swipeable style={styles.swipeItem} renderRightActions={() => rightSwipe(id, listId)}>
             <TouchableOpacity
-              key={id}
-              onPress={() => onPressItem && onPressItem(id)}
+              onPress={() => check(id)}
               style={{
                 backgroundColor: done ? '#f4f7f8' : '#fff',
                 borderColor: '#ddd',
@@ -81,11 +98,13 @@ const Items = ({ onPressItem, itemId }) => {
   );
 };
 
+
 export default function ListScreen({ route }) {
   const { id, itemId, schedule } = route.params;
   const [text, setText] = useState('');
   const [forceUpdate, forceUpdateId] = useForceUpdate();
   const [checked, setChecked] = useState(schedule);
+  const [items, setItems] = useState(null);
 
 
   useEffect(() => {
@@ -102,22 +121,20 @@ export default function ListScreen({ route }) {
   }, []);
 
   const add = (text) => {
-    if (text === null || text === "") {
+    if (text === null || text === '') {
       return false;
     }
 
-    LayoutAnimation.easeInEaseOut();
-
     db.transaction(tx => {
       tx.executeSql('insert into list (done, value, listId) values (0, ?, ?)', [text, itemId]);
-      tx.executeSql('select * from list where listId = ?', [itemId], (_, { rows }) =>
-        console.log(JSON.stringify(rows))
+      tx.executeSql('select * from list where listId = ?;', [itemId],
+        (_, { rows: { _array } }) => setItems(_array),
       );
     },
     null,
-    forceUpdate
+    forceUpdate,
     );
-  }
+  };
 
 
   const firstButton = () => {
@@ -165,20 +182,7 @@ export default function ListScreen({ route }) {
     <View style={styles.container}>
       <ScrollView style={styles.listArea}>
         <View style={styles.todoItems}>
-          <Items
-            key={`forceupdate-todo-${forceUpdateId}`}
-            done={false}
-            itemId={itemId}
-            onPressItem={id =>
-              db.transaction(
-                tx => {
-                  tx.executeSql('update list set done = case when done = 1 then 0 when done = 0 then 1 else 0 end where id = ?;', [id]);
-                },
-                null,
-                forceUpdate,
-                LayoutAnimation.configureNext(LayoutAnimation.create(200, LayoutAnimation.Types.easeInEaseOut, LayoutAnimation.Properties.opacity)),
-              )}
-          />
+          <Items key={forceUpdateId} itemId={itemId} />
         </View>
         <TextInput
           style={styles.textInput}
@@ -197,18 +201,18 @@ export default function ListScreen({ route }) {
         <List.Accordion style={styles.settings} title="設定">
           <View style={styles.schedule}>
             <Text style={styles.radioButtonTitle}>スケジュール設定</Text>
-              <View style={styles.radioButton}>
-                <RadioButton.Android value="設定なし" status={checked === null ? 'checked' : 'unchecked'} onPress={() => firstButton()} />
-                <Text>設定なし</Text>
-              </View>
-              <View style={styles.radioButton}>
-                <RadioButton.Android value="スケジュールを指定（1度のみ）" status={checked === 'calendar' ? 'checked' : 'unchecked'} onPress={() => secondButton()} />
-                <Text>スケジュールを指定（1度のみ）</Text>
-              </View>
-              <View style={styles.radioButton}>
-                <RadioButton.Android value="スケジュールを指定（繰り返し）" status={checked === 'clock' ? 'checked' : 'unchecked'} onPress={() => thirdButton()} />
-                <Text>スケジュールを指定（繰り返し）</Text>
-              </View>
+            <View style={styles.radioButton}>
+              <RadioButton.Android value="設定なし" status={checked === null ? 'checked' : 'unchecked'} onPress={() => firstButton()} />
+              <Text>設定なし</Text>
+            </View>
+            <View style={styles.radioButton}>
+              <RadioButton.Android value="スケジュールを指定（1度のみ）" status={checked === 'calendar' ? 'checked' : 'unchecked'} onPress={() => secondButton()} />
+              <Text>スケジュールを指定（1度のみ）</Text>
+            </View>
+            <View style={styles.radioButton}>
+              <RadioButton.Android value="スケジュールを指定（繰り返し）" status={checked === 'clock' ? 'checked' : 'unchecked'} onPress={() => thirdButton()} />
+              <Text>スケジュールを指定（繰り返し）</Text>
+            </View>
           </View>
         </List.Accordion>
       </ScrollView>
@@ -218,7 +222,7 @@ export default function ListScreen({ route }) {
 
 const requestPermissionsAsync = async () => {
   const { granted } = await Notifications.getPermissionsAsync();
-  if (granted) { return }
+  if (granted) { return; }
 
   await Notifications.requestPermissionsAsync();
 };
@@ -230,8 +234,8 @@ const scheduleNotificationAsync = async () => {
       body: 'test',
     },
     trigger: {
-      hour: 13,
-      minute: 44,
+      hour: 7,
+      minute: 0,
       repeats: true,
     },
   });

@@ -1,17 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions, LayoutAnimation } from 'react-native';
-import { TextInput, RadioButton, List } from 'react-native-paper';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions, LayoutAnimation, Modal } from 'react-native';
+import { TextInput, RadioButton, List, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 import * as Notifications from 'expo-notifications';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 
 const db = SQLite.openDatabase('db');
+const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
 
 const Items = ({ itemId }) => {
   const [items, setItems] = useState(null);
+  const [modalIndex, setModalIndex] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [listName, setListName] = useState('');
+  const [textModal, setTextModal] = useState('');
 
   LayoutAnimation.easeInEaseOut();
 
@@ -66,6 +79,26 @@ const Items = ({ itemId }) => {
   };
 
 
+  const addModal = (textModal, modalIndex) => {
+    if (textModal === null || textModal === '') {
+      return false;
+    }
+
+    db.transaction(tx => {
+      tx.executeSql('update list set value = ? where id = ?', [textModal, modalIndex]);
+      tx.executeSql(
+        'select * from list where listId = ?;',
+        [itemId],
+        (_, { rows: { _array } }) => setItems(_array),
+      );
+      tx.executeSql('select * from list where listId = ?', [itemId], (_, { rows }) =>
+        console.log(JSON.stringify(rows)));
+    },
+    null,
+    );
+  };
+
+
   return (
     <ScrollView style={styles.sectionContainer}>
       {items.map(({ id, done, value, listId }) => (
@@ -73,12 +106,18 @@ const Items = ({ itemId }) => {
           <Swipeable style={styles.swipeItem} renderRightActions={() => rightSwipe(id, listId)}>
             <TouchableOpacity
               onPress={() => check(id)}
+              onLongPress={() => {
+                setModalIndex(id);
+                setModalVisible(true);
+                setListName(value);
+              }}
               style={{
                 backgroundColor: done ? '#f4f7f8' : '#fff',
                 borderColor: '#ddd',
                 borderBottomWidth: 1,
                 height: 50,
                 paddingLeft: 20,
+                paddingRight: 20,
                 justifyContent: 'center',
               }}
             >
@@ -87,6 +126,7 @@ const Items = ({ itemId }) => {
                 textDecorationLine: done ? 'line-through' : 'none',
                 textDecorationStyle: done ? 'solid' : 'solid'
               }}
+                numberOfLines={2}
               >
                 {value}
               </Text>
@@ -94,6 +134,27 @@ const Items = ({ itemId }) => {
           </Swipeable>
         </View>
       ))}
+      <Modal animationType="fade" transparent={true} visible={modalVisible} style={styles.modal}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <TextInput
+              style={styles.textInputModal}
+              selectionColor="#000"
+              theme={{ roundness: 0 }}
+              placeholderTextColor="#B8B8B8"
+              placeholder={listName}
+              value={textModal}
+              onChangeText={textModal => setTextModal(textModal)}
+              onSubmitEditing={() => {
+                addModal(textModal, modalIndex);
+                setTextModal(null);
+                setModalVisible(!modalVisible);
+              }}
+            />
+            <Button style={styles.modalButton} mode="contained" color="#B8B8B8" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -108,7 +169,7 @@ export default function ListScreen({ route }) {
 
 
   useEffect(() => {
-    requestPermissionsAsync();
+    // requestPermissionsAsync();
 
     db.transaction(tx => {
       tx.executeSql(
@@ -215,6 +276,7 @@ export default function ListScreen({ route }) {
             </View>
           </View>
         </List.Accordion>
+        <Button title="テスト" onPress={scheduleNotificationAsync} />
       </ScrollView>
     </View>
   );
@@ -231,11 +293,11 @@ const scheduleNotificationAsync = async () => {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'checklist',
-      body: 'test',
+      body: 'テスト',
     },
     trigger: {
-      hour: 7,
-      minute: 0,
+      hour: 18,
+      minute: 52,
       repeats: true,
     },
   });
@@ -304,5 +366,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 10,
+  },
+  centeredView: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    height: windowHeight * 0.3,
+    width: windowWidth * 0.8,
+    borderRadius: 5,
+    backgroundColor: '#ddd',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  textInputModal: {
+    width: 250,
+  },
+  modalButton: {
+    marginTop: 30,
   },
 });

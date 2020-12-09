@@ -2,12 +2,8 @@ import React, { useState } from "react";
 import { Button, View } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
-const Example = () => {
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
+const TimePicker = () => {
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(true);
 
   const hideDatePicker = () => {
     setDatePickerVisibility(false);
@@ -20,7 +16,6 @@ const Example = () => {
 
   return (
     <View>
-      <Button title="Show Date Picker" onPress={showDatePicker} />
       <DateTimePickerModal
         cancelTextIOS="キャンセル"
         confirmTextIOS="設定する"
@@ -34,4 +29,4 @@ const Example = () => {
   );
 };
 
-export default Example;
+export default TimePicker;

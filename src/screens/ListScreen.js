@@ -4,6 +4,10 @@ import { TextInput, RadioButton, List, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 import * as Notifications from 'expo-notifications';
+import { Calendar } from 'react-native-calendars';
+import { Picker } from '@react-native-picker/picker';
+
+import TimePicker from '../components/DateTimePicker';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -166,6 +170,7 @@ export default function ListScreen({ route }) {
   const [forceUpdate, forceUpdateId] = useForceUpdate();
   const [checked, setChecked] = useState(schedule);
   const [items, setItems] = useState(null);
+  const [repeat, setRepeat] = useState(null);
 
 
   useEffect(() => {
@@ -274,6 +279,26 @@ export default function ListScreen({ route }) {
               <RadioButton.Android value="スケジュールを指定（繰り返し）" status={checked === 'clock' ? 'checked' : 'unchecked'} onPress={() => thirdButton()} />
               <Text>スケジュールを指定（繰り返し）</Text>
             </View>
+          </View>
+          <View>
+            <List.Accordion title="日付">
+              <Calendar />
+            </List.Accordion>
+            <List.Accordion title="時間">
+              <TimePicker />
+            </List.Accordion>
+            <List.Accordion title="繰り返し">
+              <Picker
+                selectedValue={repeat}
+                style={{ height: 200, width: 100, marginLeft: 130 }}
+                onValueChange={(itemValue, itemIndex) => setRepeat(itemValue)}
+              >
+                <Picker.Item label="日毎" value="date" />
+                <Picker.Item label="週毎" value="week" />
+                <Picker.Item label="月毎" value="months" />
+                <Picker.Item label="年毎" value="year" />
+              </Picker>
+            </List.Accordion>
           </View>
         </List.Accordion>
         <Button title="テスト" onPress={scheduleNotificationAsync} />

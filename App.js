@@ -1,7 +1,7 @@
 import React from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator, HeaderBackButton } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import * as Notifications from 'expo-notifications';
 
 import HomeScreen from './src/screens/HomeScreen';
@@ -9,7 +9,7 @@ import ListScreen from './src/screens/ListScreen';
 
 const Stack = createStackNavigator();
 
-function MyStack(navigation) {
+function MyStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="タスク" component={HomeScreen} options={{ headerStyle: { backgroundColor: '#fffbf6' }, headerTintColor: '#575757' }} />

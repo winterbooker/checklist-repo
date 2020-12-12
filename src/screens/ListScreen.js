@@ -2,13 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Dimensions, Modal } from 'react-native';
 import { TextInput, List, Button } from 'react-native-paper';
 import * as SQLite from 'expo-sqlite';
-import { Calendar } from 'react-native-calendars';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Picker } from '@react-native-picker/picker';
 
 
 import SubtaskItems from '../components/SubtaskItems';
 
+
+LocaleConfig.locales['jp'] = {
+  monthNames: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+  monthNamesShort: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+  dayNames: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
+  dayNamesShort: ['日', '月', '火', '水', '木', '金', '土'],
+};
+LocaleConfig.defaultLocale = 'jp';
 
 const db = SQLite.openDatabase('db');
 const windowHeight = Dimensions.get('window').height;
@@ -31,6 +39,9 @@ export default function ListScreen({ route }) {
       tx.executeSql(
         'create table if not exists list (id integer primary key not null, done int, value text, listId integer);',
       );
+      // tx.executeSql(
+      //  'drop table list;',
+      // );
     });
   }, []);
 
@@ -59,7 +70,20 @@ export default function ListScreen({ route }) {
   };
 
   const handleConfirm = (date) => {
-    console.log('A date has been picked: ', date);
+    const hour = Number(JSON.stringify(date).split('T')[1].slice(0, 2)) + 9;
+    if (hour > 23) {
+      db.transaction((tx) => {
+        tx.executeSql('update items set hour = ? where id = ?', [hour - 24, id]);
+        tx.executeSql('select * from items', [], (_, { rows }) =>
+          console.log(JSON.stringify(rows)));
+      });
+    } else {
+      db.transaction((tx) => {
+        tx.executeSql('update items set hour = ? where id = ?', [hour, id]);
+        tx.executeSql('select * from items', [], (_, { rows }) =>
+          console.log(JSON.stringify(rows)));
+      });
+    }
     hideDatePicker();
   };
 
@@ -88,7 +112,13 @@ export default function ListScreen({ route }) {
             <Modal animationType="fade" transparent={true} visible={isCalendarVisible} style={styles.modal}>
               <View style={styles.centeredView}>
                 <View style={styles.modalView}>
-                  <Calendar />
+                  <Calendar
+                    style={{
+                      height: 350,
+                      width: 300,
+                    }}
+                    onDayPress={(day) => { console.log(day['day']); }}
+                  />
                   <Button style={styles.modalButton} mode="contained" color="#B8B8B8" onPress={() => setCalendarVisible(!isCalendarVisible)}>閉じる</Button>
                 </View>
               </View>
@@ -96,7 +126,8 @@ export default function ListScreen({ route }) {
 
             <Button onPress={() => showDatePicker()}>時間</Button>
             <DateTimePickerModal
-              cancelTextIOS="キャンセル"
+              date={new Date()}
+              cancelTextIOS="閉じる"
               confirmTextIOS="設定する"
               headerTextIOS="時間を指定"
               isVisible={isDatePickerVisible}
@@ -119,7 +150,15 @@ export default function ListScreen({ route }) {
                     <Picker.Item label="月毎" value="months" />
                     <Picker.Item label="年毎" value="year" />
                   </Picker>
-                  <Button style={styles.modalButton} mode="contained" color="#B8B8B8" onPress={() => setRepeatVisible(!isRepeatVisible)}>閉じる</Button>
+                  <Button
+                    style={styles.modalButton}
+                    mode="contained"
+                    color="#B8B8B8"
+                    onPress={() => setRepeatVisible(!isRepeatVisible)}
+                    theme={{ fontSize: 18 }}
+                  >
+                    閉じる
+                  </Button>
                 </View>
               </View>
             </Modal>
@@ -163,8 +202,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    height: windowHeight * 0.3,
-    width: windowWidth * 0.8,
+    height: windowHeight * 0.6,
+    width: windowWidth * 0.95,
     borderRadius: 5,
     backgroundColor: '#ddd',
     alignItems: 'center',

@@ -19,10 +19,10 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        'create table if not exists items (id integer primary key not null, done int, value text, schedule text);',
+        'create table if not exists items (id integer primary key not null, done int, value text, hour int, minute int);',
       );
       // tx.executeSql(
-      // 'drop table items;',
+      //  'drop table items;',
       // );
     });
   }, []);

@@ -72,26 +72,6 @@ radioButton: {
 
 
 
-/* 通知機能実装時にいじる
-const scheduleNotificationAsync = async () => {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'checklist',
-      body: 'テスト',
-    },
-    trigger: {
-      hour: 18,
-      minute: 52,
-      repeats: true,
-    },
-  });
-};
-*/
-
-
-
-
-
 const renderSwitch = (value, schedule) => {
   switch (schedule) {
     case null:

@@ -82,12 +82,12 @@ export default function TaskItems({ navigation }) {
 
   return (
     <View style={styles.sectionContainer}>
-      {items.map(({ id, value, schedule }) => (
+      {items.map(({ id, value, timeSwitch, hour, minute }) => (
         <View key={id}>
           <Swipeable renderRightActions={() => rightSwipe(id)}>
             <TouchableOpacity
               style={styles.item}
-              onPress={() => navigation.navigate('サブタスク', { id, itemId: id, schedule })}
+              onPress={() => navigation.navigate('サブタスク', { id, itemId: id, timeSwitch })}
               onLongPress={() => {
                 setModalIndex(id);
                 setModalVisible(true);
@@ -95,6 +95,7 @@ export default function TaskItems({ navigation }) {
               }}
             >
               <Text style={styles.swipeTitle}>{value}</Text>
+              <Text style={styles.swipeDate}>{hour}:{minute}</Text>
             </TouchableOpacity>
           </Swipeable>
         </View>

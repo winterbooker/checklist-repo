@@ -6,6 +6,7 @@
     "import"
   ],
   "rules": {
+    "max-len": 0,
     "consistent-return": 0,
     "no-shadow": 0,
     "react/jsx-boolean-value": 0,

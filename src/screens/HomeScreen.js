@@ -19,13 +19,13 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        'create table if not exists items (id integer primary key not null, done int, value text, hour int, minute int, dateSwitch int, timeSwitch int, repeatSwitch int);',
+        'create table if not exists items (id integer primary key not null, value text, hour int, minute int, dateSwitch int, timeSwitch int, repeatSwitch int);',
       );
       // tx.executeSql(
       //  'drop table items;',
       // );
     });
-  }, []);
+  });
 
 
   const add = (text) => {
@@ -33,8 +33,9 @@ export default function HomeScreen({ navigation }) {
       return false;
     }
 
+
     db.transaction((tx) => {
-      tx.executeSql('insert into items (done, value) values (0, ?)', [text]);
+      tx.executeSql('insert into items (value) values (?)', [text]);
       tx.executeSql(
         'select * from items;',
         null,

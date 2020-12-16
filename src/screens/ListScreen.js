@@ -39,6 +39,7 @@ export default function ListScreen({ route }) {
   const [timeHour, setTimeHour] = useState(null);
   const [timeMinute, setTimeMinute] = useState(null);
   const [value, setValue] = useState(null);
+  const [notificationId, setNotificationId] = useState(null);
   const [repeatIsEnabled, setRepeatIsEnabled] = useState(false);
 
 
@@ -67,6 +68,11 @@ export default function ListScreen({ route }) {
         'select value from items where id = ?;',
         [id],
         (_, { rows }) => setValue(rows._array[0].value),
+      );
+      tx.executeSql(
+        'select notificationId from items where id = ?;',
+        [id],
+        (_, { rows }) => setNotificationId(rows._array[0].notificationId),
       );
       // tx.executeSql(
       //  'drop table list;',
@@ -113,6 +119,15 @@ export default function ListScreen({ route }) {
         tx.executeSql('select * from items', [], (_, { rows }) =>
           console.log(JSON.stringify(rows)));
       });
+      Notifications.scheduleNotificationAsync({
+        content: {
+          body: String(value),
+        },
+        trigger: {
+          hour: Number(hour - 24),
+          minute: Number(minute),
+        },
+      });
     } else {
       db.transaction((tx) => {
         tx.executeSql('update items set hour = ? where id = ?', [hour, id]);
@@ -121,9 +136,18 @@ export default function ListScreen({ route }) {
         tx.executeSql('select * from items', [], (_, { rows }) =>
           console.log(JSON.stringify(rows)));
       });
+      Notifications.scheduleNotificationAsync({
+        content: {
+          body: String(value),
+        },
+        trigger: {
+          hour: Number(hour),
+          minute: Number(minute),
+        },
+      });
     }
-    // 通知機能を実行してモーダルを閉じる
-    scheduleNotificationAsync();
+    Notifications.cancelScheduledNotificationAsync(notificationId);
+    getLastId();
     hideDatePicker();
   };
 
@@ -138,10 +162,22 @@ export default function ListScreen({ route }) {
       },
       null,
       forceUpdate);
+
+
       if (timeIsEnabled === false) {
-        scheduleNotificationAsync();
+        Notifications.scheduleNotificationAsync({
+          content: {
+            body: String(value),
+          },
+          trigger: {
+            hour: Number(timeHour),
+            minute: Number(timeMinute),
+          },
+        });
+        Notifications.cancelScheduledNotificationAsync(notificationId);
+        getLastId();
       } else {
-        Notifications.cancelAllScheduledNotificationsAsync(); // IDを指定して特定の通知をキャンセルするように変更しないといけない
+        Notifications.cancelScheduledNotificationAsync(notificationId); // IDを指定して特定の通知をキャンセルするように変更しないといけない
       }
     } else {
       Alert.alert('時間を設定してください');
@@ -162,6 +198,19 @@ export default function ListScreen({ route }) {
     });
   };
 
+  const getLastId = async () => {
+    const notifications = await Notifications.getAllScheduledNotificationsAsync();
+    const identifier = notifications.slice(-1)[0].identifier;
+    console.log(identifier);
+    db.transaction((tx) => {
+      tx.executeSql('update items set notificationId = ? where id = ?', [identifier, id]);
+      tx.executeSql('select * from items', [], (_, { rows }) =>
+        console.log(JSON.stringify(rows)));
+    },
+    null,
+    forceUpdate);
+  };
+
 
   // 通知設定を全件取得する
   const getall = async () => {
@@ -177,7 +226,6 @@ export default function ListScreen({ route }) {
     const identifier = notifications;
     console.log(identifier);
   };
-
 
 
   return (
@@ -269,6 +317,7 @@ export default function ListScreen({ route }) {
               </Modal>
             </View>
             <View style={styles.test}>
+              <Button onPress={() => getLastId()}>最後のIDデータ取得</Button>
               <Button onPress={() => getall()}>全データ取得</Button>
               <Button onPress={() => cancel()}>全データ削除</Button>
             </View>

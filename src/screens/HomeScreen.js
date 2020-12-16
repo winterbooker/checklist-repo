@@ -19,7 +19,7 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        'create table if not exists items (id integer primary key not null, value text, hour int, minute int, dateSwitch int, timeSwitch int, repeatSwitch int);',
+        'create table if not exists items (id integer primary key not null, value text, hour int, minute int, dateSwitch int, timeSwitch int, repeatSwitch int, notificationId text);',
       );
       // tx.executeSql(
       //  'drop table items;',

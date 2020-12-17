@@ -126,6 +126,7 @@ export default function ListScreen({ route }) {
         trigger: {
           hour: Number(hour - 24),
           minute: Number(minute),
+          repeats: true,
         },
       });
     } else {
@@ -143,6 +144,7 @@ export default function ListScreen({ route }) {
         trigger: {
           hour: Number(hour),
           minute: Number(minute),
+          repeats: true,
         },
       });
     }
@@ -172,6 +174,7 @@ export default function ListScreen({ route }) {
           trigger: {
             hour: Number(timeHour),
             minute: Number(timeMinute),
+            repeats: true,
           },
         });
         Notifications.cancelScheduledNotificationAsync(notificationId);
@@ -194,6 +197,7 @@ export default function ListScreen({ route }) {
       trigger: {
         hour: Number(timeHour),
         minute: Number(timeMinute),
+        repeats: true,
       },
     });
   };
@@ -201,7 +205,7 @@ export default function ListScreen({ route }) {
   const getLastId = async () => {
     const notifications = await Notifications.getAllScheduledNotificationsAsync();
     const identifier = notifications.slice(-1)[0].identifier;
-    console.log(identifier);
+    // console.log(identifier);
     db.transaction((tx) => {
       tx.executeSql('update items set notificationId = ? where id = ?', [identifier, id]);
       tx.executeSql('select * from items', [], (_, { rows }) =>

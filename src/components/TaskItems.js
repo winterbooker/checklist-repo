@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Text, Dimensions, Modal, LayoutAnim
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
+import * as Notifications from 'expo-notifications';
 
 
 const db = SQLite.openDatabase('db');
@@ -16,7 +17,6 @@ export default function TaskItems({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const [listName, setListName] = useState('');
-
 
   LayoutAnimation.easeInEaseOut();
 

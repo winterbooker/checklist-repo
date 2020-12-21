@@ -8,6 +8,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import ListScreen from './src/screens/ListScreen';
 
 
+/*
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -15,6 +16,7 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+*/
 
 const Stack = createStackNavigator();
 

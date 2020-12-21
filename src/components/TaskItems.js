@@ -17,6 +17,8 @@ export default function TaskItems({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const [listName, setListName] = useState('');
+  const [notificationId, setNotificationId] = useState(null);
+
 
   LayoutAnimation.easeInEaseOut();
 
@@ -73,12 +75,35 @@ export default function TaskItems({ navigation }) {
         null,
         (_, { rows: { _array } }) => setItems(_array),
       );
+      tx.executeSql(
+        'select notificationId from items where id = ?;',
+        [modalIndex],
+        (_, { rows }) => setNotificationId(rows._array[0].notificationId),
+      );
       tx.executeSql('select * from items', [], (_, { rows }) =>
         console.log(JSON.stringify(rows)));
     },
     null);
+    cancelNotification();
+    setNotification();
   };
 
+  const cancelNotification = async () => {
+    Notifications.cancelAllScheduledNotificationsAsync(notificationId);
+  };
+
+  const setNotification = () => {
+    Notifications.scheduleNotificationAsync({
+      content: {
+        body: 'tesy',
+      },
+      trigger: {
+        hour: 22,
+        minute: 54,
+        repeats: true,
+      },
+    });
+  };
 
   return (
     <View style={styles.sectionContainer}>

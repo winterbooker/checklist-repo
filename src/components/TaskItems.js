@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Dimensions, Modal, LayoutAnimation } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Dimensions, Modal, LayoutAnimation, Animated } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
-import * as Notifications from 'expo-notifications';
 
 
 const db = SQLite.openDatabase('db');
@@ -17,7 +16,6 @@ export default function TaskItems({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const [listName, setListName] = useState('');
-  const [notificationId, setNotificationId] = useState(null);
 
 
   LayoutAnimation.easeInEaseOut();
@@ -25,11 +23,8 @@ export default function TaskItems({ navigation }) {
 
   useEffect(() => {
     db.transaction((tx) => {
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
+      tx.executeSql('select * from items;', [],
+        (_, { rows: { _array } }) => setItems(_array));
     });
   }, []);
 
@@ -47,18 +42,15 @@ export default function TaskItems({ navigation }) {
       tx.executeSql('delete from list where listId = ?;', [id]);
     });
     db.transaction((tx) => {
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
+      tx.executeSql('select * from items;', [],
+        (_, { rows: { _array } }) => setItems(_array));
     });
   };
 
 
   const rightSwipe = (id) => (
     <TouchableOpacity style={styles.deleteBox} onPress={() => handleDelete(id)}>
-      <Text style={styles.deleteText}>削除</Text>
+      <Animated.Text style={styles.deleteText}>削除</Animated.Text>
     </TouchableOpacity>
   );
 
@@ -70,40 +62,14 @@ export default function TaskItems({ navigation }) {
 
     db.transaction((tx) => {
       tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
-      tx.executeSql(
-        'select notificationId from items where id = ?;',
-        [modalIndex],
-        (_, { rows }) => setNotificationId(rows._array[0].notificationId),
-      );
+      tx.executeSql('select * from items;', [],
+        (_, { rows: { _array } }) => setItems(_array));
       tx.executeSql('select * from items', [], (_, { rows }) =>
         console.log(JSON.stringify(rows)));
     },
     null);
-    cancelNotification();
-    setNotification();
   };
 
-  const cancelNotification = async () => {
-    Notifications.cancelAllScheduledNotificationsAsync(notificationId);
-  };
-
-  const setNotification = () => {
-    Notifications.scheduleNotificationAsync({
-      content: {
-        body: 'tesy',
-      },
-      trigger: {
-        hour: 22,
-        minute: 54,
-        repeats: true,
-      },
-    });
-  };
 
   return (
     <View style={styles.sectionContainer}>
@@ -112,7 +78,7 @@ export default function TaskItems({ navigation }) {
           <Swipeable renderRightActions={() => rightSwipe(id)}>
             <TouchableOpacity
               style={styles.item}
-              onPress={() => navigation.navigate('サブタスク', { id, itemId: id })}
+              onPress={() => navigation.navigate('LIST', { id, itemId: id, name: value })}
               onLongPress={() => {
                 setModalIndex(id);
                 setModalVisible(true);
@@ -130,7 +96,7 @@ export default function TaskItems({ navigation }) {
             <TextInput
               style={styles.textInputModal}
               selectionColor="#000"
-              theme={{ roundness: 0 }}
+              theme={{ colors: { text: '#000', primary: '#ddd' } }}
               placeholderTextColor="#B8B8B8"
               placeholder={listName}
               value={textModal}

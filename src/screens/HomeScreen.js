@@ -19,7 +19,7 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        'create table if not exists items (id integer primary key not null, value text, hour int, minute int, dateSwitch int, timeSwitch int, repeatSwitch int, notificationId text);',
+        'create table if not exists items (id integer primary key not null, value text);',
       );
       // tx.executeSql(
       //  'drop table items;',
@@ -36,13 +36,10 @@ export default function HomeScreen({ navigation }) {
 
     db.transaction((tx) => {
       tx.executeSql('insert into items (value) values (?)', [text]);
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
+      tx.executeSql('select * from items;', [],
+        (_, { rows: { _array } }) => setItems(_array));
+      tx.executeSql('select * from items', [],
+        (_, { rows }) => console.log(JSON.stringify(rows)));
     },
     null,
     forceUpdate);

@@ -25,6 +25,7 @@
     "react-native": "https://github.com/expo/react-native/archive/sdk-39.0.4.tar.gz",
     "react-native-calendars": "^1.826.0",
     "react-native-gesture-handler": "~1.7.0",
+    "react-native-keyboard-aware-scroll-view": "^0.9.3",
     "react-native-keyboard-aware-view": "0.0.14",
     "react-native-modal-datetime-picker": "^9.1.0",
     "react-native-paper": "^4.3.1",

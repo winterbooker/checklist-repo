@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Dimensions, LayoutAnimation, Modal } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions, LayoutAnimation, Modal, KeyboardAvoidingView } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 
 const db = SQLite.openDatabase('db');
@@ -16,6 +17,9 @@ export default function SubtaskItems({ itemId }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [listName, setListName] = useState('');
   const [textModal, setTextModal] = useState('');
+  const [itemsList, setItemsList] = useState(null);
+  const [text, setText] = useState('');
+  const [forceUpdate, forceUpdateId] = useForceUpdate();
 
 
   LayoutAnimation.easeInEaseOut();
@@ -32,8 +36,37 @@ export default function SubtaskItems({ itemId }) {
   }, []);
 
 
+  const add = (text) => {
+    if (text === null || text === '') {
+      return false;
+    }
+    db.transaction((tx) => {
+      tx.executeSql('insert into list (done, value, listId) values (0, ?, ?)', [text, itemId]);
+      tx.executeSql('select * from list where listId = ?;', [itemId],
+        (_, { rows: { _array } }) => setItems(_array));
+    },
+    null,
+    forceUpdate);
+  };
+
+
   if (items === null || items.length === 0) {
-    return null;
+    return (
+      <TextInput
+        style={styles.textInput}
+        selectionColor="black"
+        theme={{ colors: { text: 'black', primary: '#fff' }, roundness: 0 }}
+        placeholderTextColor="#8d8d8f"
+        placeholder="サブタスクを追加"
+        value={text}
+        onChangeText={(text) => setText(text)}
+        onSubmitEditing={() => {
+          add(text);
+          setText(null);
+        }}
+        left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
+      />
+    );
   }
 
 
@@ -90,7 +123,7 @@ export default function SubtaskItems({ itemId }) {
 
 
   return (
-    <ScrollView>
+    <KeyboardAvoidingView style={styles.container} behavior="padding" keyboardVerticalOffset={100}>
       {items.map(({ id, done, value, listId }) => (
         <View key={id}>
           <Swipeable renderRightActions={() => rightSwipe(id, listId)}>
@@ -131,7 +164,7 @@ export default function SubtaskItems({ itemId }) {
             <TextInput
               style={styles.textInputModal}
               selectionColor="#000"
-              theme={{ roundness: 0 }}
+              theme={{ colors: { text: '#000', primary: '#ddd' } }}
               placeholderTextColor="#B8B8B8"
               placeholder={listName}
               value={textModal}
@@ -146,12 +179,36 @@ export default function SubtaskItems({ itemId }) {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+      <TextInput
+        style={styles.textInput}
+        selectionColor="black"
+        theme={{ colors: { text: 'black', primary: '#fff' }, roundness: 0 }}
+        placeholderTextColor="#8d8d8f"
+        placeholder="サブタスクを追加"
+        value={text}
+        onChangeText={(text) => setText(text)}
+        onSubmitEditing={() => {
+          add(text);
+          setText(null);
+        }}
+        left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
+      />
+    </KeyboardAvoidingView>
   );
 }
 
 
+const useForceUpdate = () => {
+  const [value, setValue] = useState(0);
+  return [() => setValue(value + 1), value];
+};
+
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#f2f2f7',
+  },
   deleteBox: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -168,8 +225,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    height: windowHeight * 0.3,
-    width: windowWidth * 0.8,
+    height: 200,
+    width: 350,
     borderRadius: 5,
     backgroundColor: '#ddd',
     alignItems: 'center',
@@ -187,5 +244,11 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     marginTop: 30,
+  },
+  textInput: {
+    backgroundColor: '#fff',
+    borderRadius: 0,
+    marginTop: 20,
+    marginBottom: 50,
   },
 });

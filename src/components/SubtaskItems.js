@@ -22,13 +22,9 @@ export default function SubtaskItems({ itemId }) {
 
   useEffect(() => {
     db.transaction((tx) => {
-      tx.executeSql(
-        'create table if not exists list (id integer primary key not null, done int, value text, listId int);',
-      );
-      tx.executeSql(
-        'select * from list where listId = ?;', [itemId],
-        (_, { rows: { _array } }) => setItems(_array),
-      );
+      tx.executeSql('create table if not exists list (id integer primary key not null, done int, value text, listId int);');
+      tx.executeSql('select * from list where listId = ?;', [itemId],
+        (_, { rows: { _array } }) => setItems(_array));
     });
   }, []);
 
@@ -147,7 +143,7 @@ export default function SubtaskItems({ itemId }) {
             <TextInput
               style={styles.textInputModal}
               selectionColor="#000"
-              theme={{ colors: { text: '#000', primary: '#ddd' } }}
+              theme={{ colors: { text: '#000', primary: '#ddd' }, roundness: 0 }}
               placeholderTextColor="#B8B8B8"
               placeholder={listName}
               value={textModal}
@@ -184,7 +180,6 @@ export default function SubtaskItems({ itemId }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     backgroundColor: '#F4F6F6',
   },
   deleteBox: {
@@ -225,7 +220,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: '#fff',
-    borderRadius: 0,
     marginTop: 20,
     marginBottom: 50,
   },

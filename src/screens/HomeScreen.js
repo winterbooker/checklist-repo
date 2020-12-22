@@ -21,10 +21,10 @@ export default function HomeScreen({ navigation }) {
       return false;
     }
     db.transaction((tx) => {
-      tx.executeSql('insert into items (value) values (?)', [text]);
+      tx.executeSql('insert into items (value) values (?);', [text]);
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
-      tx.executeSql('select * from items', [],
+      tx.executeSql('select * from items;', [],
         (_, { rows }) => console.log(JSON.stringify(rows)));
     },
     null,

@@ -21,9 +21,7 @@ export default function TaskItems({ navigation }) {
 
   useEffect(() => {
     db.transaction((tx) => {
-      tx.executeSql(
-        'create table if not exists items (id integer primary key not null, value text);',
-      );
+      tx.executeSql('create table if not exists items (id integer primary key not null, value text);');
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
     });
@@ -38,11 +36,7 @@ export default function TaskItems({ navigation }) {
   const handleDelete = (id) => {
     db.transaction((tx) => {
       tx.executeSql('delete from items where id = ?;', [id]);
-    });
-    db.transaction((tx) => {
       tx.executeSql('delete from list where listId = ?;', [id]);
-    });
-    db.transaction((tx) => {
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
     });
@@ -66,8 +60,7 @@ export default function TaskItems({ navigation }) {
         (_, { rows: { _array } }) => setItems(_array));
       tx.executeSql('select * from items', [],
         (_, { rows }) => console.log(JSON.stringify(rows)));
-    },
-    null);
+    });
   };
 
 
@@ -91,13 +84,13 @@ export default function TaskItems({ navigation }) {
           </Swipeable>
         </View>
       ))}
-      <Modal animationType="fade" transparent={true} visible={modalVisible} style={styles.modal}>
+      <Modal style={styles.modal} animationType="fade" transparent={true} visible={modalVisible}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <TextInput
               style={styles.textInputModal}
               selectionColor="#000"
-              theme={{ colors: { text: '#000', primary: '#ddd' } }}
+              theme={{ colors: { text: '#000', primary: '#ddd' }, roundness: 0 }}
               placeholderTextColor="#B8B8B8"
               placeholder={listName}
               value={textModal}
@@ -119,7 +112,6 @@ export default function TaskItems({ navigation }) {
 
 const styles = StyleSheet.create({
   sectionContainer: {
-    backgroundColor: '#fff',
     flex: 1,
   },
   item: {

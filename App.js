@@ -13,11 +13,14 @@ const Stack = createStackNavigator();
 
 function MyStack() {
   return (
-    <Stack.Navigator headerBackTitle="戻る">
-      <Stack.Screen name="CHECK OUT" headerBackTitle="戻る" component={HomeScreen} options={{ headerStyle: { backgroundColor: '#fffbf6' }, headerTintColor: '#575757' }} />
+    <Stack.Navigator>
+      <Stack.Screen
+        name="CHECK OUT"
+        component={HomeScreen}
+        options={{ headerStyle: { backgroundColor: '#fffbf6' }, headerTintColor: '#575757' }}
+      />
       <Stack.Screen
         name="LIST"
-        headerBackTitle="戻る"
         component={ListScreen}
         options={({ route }) => ({ title: route.params.name, headerStyle: { backgroundColor: '#fffbf6' }, headerTintColor: '#575757', headerBackTitle: '戻る' })}
       />

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Dimensions, Modal, LayoutAnimation, Animated } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Modal, LayoutAnimation } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
 
 
 const db = SQLite.openDatabase('db');
-const windowHeight = Dimensions.get('window').height;
-const windowWidth = Dimensions.get('window').width;
 
 
 export default function TaskItems({ navigation }) {
@@ -23,6 +21,9 @@ export default function TaskItems({ navigation }) {
 
   useEffect(() => {
     db.transaction((tx) => {
+      tx.executeSql(
+        'create table if not exists items (id integer primary key not null, value text);',
+      );
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
     });
@@ -50,7 +51,7 @@ export default function TaskItems({ navigation }) {
 
   const rightSwipe = (id) => (
     <TouchableOpacity style={styles.deleteBox} onPress={() => handleDelete(id)}>
-      <Animated.Text style={styles.deleteText}>削除</Animated.Text>
+      <Text style={styles.deleteText}>削除</Text>
     </TouchableOpacity>
   );
 
@@ -59,13 +60,12 @@ export default function TaskItems({ navigation }) {
     if (textModal === null || textModal === '') {
       return false;
     }
-
     db.transaction((tx) => {
       tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
+      tx.executeSql('select * from items', [],
+        (_, { rows }) => console.log(JSON.stringify(rows)));
     },
     null);
   };
@@ -78,6 +78,7 @@ export default function TaskItems({ navigation }) {
           <Swipeable renderRightActions={() => rightSwipe(id)}>
             <TouchableOpacity
               style={styles.item}
+              activeOpacity={1}
               onPress={() => navigation.navigate('LIST', { id, itemId: id, name: value })}
               onLongPress={() => {
                 setModalIndex(id);
@@ -107,7 +108,7 @@ export default function TaskItems({ navigation }) {
                 setModalVisible(!modalVisible);
               }}
             />
-            <Button style={styles.modalButton} mode="contained" color="#B8B8B8" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
+            <Button style={styles.modalButton} mode="contained" color="#ddd" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
           </View>
         </View>
       </Modal>
@@ -145,6 +146,7 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: '#fff',
+    fontWeight: 'bold',
   },
   centeredView: {
     flex: 1,
@@ -153,8 +155,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    height: windowHeight * 0.3,
-    width: windowWidth * 0.8,
+    height: 280,
+    width: 300,
     borderRadius: 5,
     backgroundColor: '#ddd',
     alignItems: 'center',

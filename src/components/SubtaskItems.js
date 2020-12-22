@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions, LayoutAnimation, Modal, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, LayoutAnimation, Modal, KeyboardAvoidingView } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 
 const db = SQLite.openDatabase('db');
-const windowHeight = Dimensions.get('window').height;
-const windowWidth = Dimensions.get('window').width;
 
 
 export default function SubtaskItems({ itemId }) {
@@ -17,9 +14,7 @@ export default function SubtaskItems({ itemId }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [listName, setListName] = useState('');
   const [textModal, setTextModal] = useState('');
-  const [itemsList, setItemsList] = useState(null);
   const [text, setText] = useState('');
-  const [forceUpdate, forceUpdateId] = useForceUpdate();
 
 
   LayoutAnimation.easeInEaseOut();
@@ -28,8 +23,10 @@ export default function SubtaskItems({ itemId }) {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        'select * from list where listId = ?;',
-        [itemId],
+        'create table if not exists list (id integer primary key not null, done int, value text, listId int);',
+      );
+      tx.executeSql(
+        'select * from list where listId = ?;', [itemId],
         (_, { rows: { _array } }) => setItems(_array),
       );
     });
@@ -42,11 +39,9 @@ export default function SubtaskItems({ itemId }) {
     }
     db.transaction((tx) => {
       tx.executeSql('insert into list (done, value, listId) values (0, ?, ?)', [text, itemId]);
-      tx.executeSql('select * from list where listId = ?;', [itemId],
+      tx.executeSql('select * from list where listId = ?', [itemId],
         (_, { rows: { _array } }) => setItems(_array));
-    },
-    null,
-    forceUpdate);
+    });
   };
 
 
@@ -54,10 +49,10 @@ export default function SubtaskItems({ itemId }) {
     return (
       <TextInput
         style={styles.textInput}
-        selectionColor="black"
-        theme={{ colors: { text: 'black', primary: '#fff' }, roundness: 0 }}
+        selectionColor="#000"
+        theme={{ colors: { text: '#000', primary: '#fff' }, roundness: 0 }}
         placeholderTextColor="#8d8d8f"
-        placeholder="サブタスクを追加"
+        placeholder="タスクを追加"
         value={text}
         onChangeText={(text) => setText(text)}
         onSubmitEditing={() => {
@@ -73,13 +68,8 @@ export default function SubtaskItems({ itemId }) {
   const handleDelete = (id, listId) => {
     db.transaction((tx) => {
       tx.executeSql('delete from list where id = ?;', [id]);
-    });
-    db.transaction((tx) => {
-      tx.executeSql(
-        'select * from list where listId = ?;',
-        [listId],
-        (_, { rows: { _array } }) => setItems(_array),
-      );
+      tx.executeSql('select * from list where listId = ?;', [listId],
+        (_, { rows: { _array } }) => setItems(_array));
     });
   };
 
@@ -94,13 +84,9 @@ export default function SubtaskItems({ itemId }) {
   const check = (id) => {
     db.transaction((tx) => {
       tx.executeSql('update list set done = case when done = 1 then 0 when done = 0 then 1 else 0 end where id = ?;', [id]);
-      tx.executeSql(
-        'select * from list where listId = ?;',
-        [itemId],
-        (_, { rows: { _array } }) => setItems(_array),
-      );
-    },
-    null);
+      tx.executeSql('select * from list where listId = ?;', [itemId],
+        (_, { rows: { _array } }) => setItems(_array));
+    });
   };
 
 
@@ -108,16 +94,12 @@ export default function SubtaskItems({ itemId }) {
     if (textModal === null || textModal === '') {
       return false;
     }
-
     db.transaction((tx) => {
       tx.executeSql('update list set value = ? where id = ?', [textModal, modalIndex]);
-      tx.executeSql(
-        'select * from list where listId = ?;',
-        [itemId],
-        (_, { rows: { _array } }) => setItems(_array),
-      );
-      tx.executeSql('select * from list where listId = ?', [itemId], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
+      tx.executeSql('select * from list where listId = ?;', [itemId],
+        (_, { rows: { _array } }) => setItems(_array));
+      tx.executeSql('select * from list where listId = ?', [itemId],
+        (_, { rows }) => console.log(JSON.stringify(rows)));
     });
   };
 
@@ -129,7 +111,7 @@ export default function SubtaskItems({ itemId }) {
           <Swipeable renderRightActions={() => rightSwipe(id, listId)}>
             <TouchableOpacity
               style={{
-                backgroundColor: done ? '#f4f7f8' : '#fff',
+                backgroundColor: done ? '#F4F6F6' : '#fff',
                 borderColor: '#ddd',
                 borderBottomWidth: 1,
                 height: 50,
@@ -137,6 +119,7 @@ export default function SubtaskItems({ itemId }) {
                 paddingRight: 20,
                 justifyContent: 'center',
               }}
+              activeOpacity={1}
               onPress={() => check(id)}
               onLongPress={() => {
                 setModalIndex(id);
@@ -175,16 +158,16 @@ export default function SubtaskItems({ itemId }) {
                 setModalVisible(!modalVisible);
               }}
             />
-            <Button style={styles.modalButton} mode="contained" color="#B8B8B8" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
+            <Button style={styles.modalButton} mode="contained" color="#ddd" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
           </View>
         </View>
       </Modal>
       <TextInput
         style={styles.textInput}
-        selectionColor="black"
-        theme={{ colors: { text: 'black', primary: '#fff' }, roundness: 0 }}
+        selectionColor="#000"
+        theme={{ colors: { text: '#000', primary: '#fff' }, roundness: 0 }}
         placeholderTextColor="#8d8d8f"
-        placeholder="サブタスクを追加"
+        placeholder="タスクを追加"
         value={text}
         onChangeText={(text) => setText(text)}
         onSubmitEditing={() => {
@@ -198,16 +181,11 @@ export default function SubtaskItems({ itemId }) {
 }
 
 
-const useForceUpdate = () => {
-  const [value, setValue] = useState(0);
-  return [() => setValue(value + 1), value];
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#f2f2f7',
+    backgroundColor: '#F4F6F6',
   },
   deleteBox: {
     alignItems: 'center',
@@ -225,8 +203,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    height: 200,
-    width: 350,
+    height: 280,
+    width: 300,
     borderRadius: 5,
     backgroundColor: '#ddd',
     alignItems: 'center',

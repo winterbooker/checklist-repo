@@ -21,7 +21,7 @@ export default function TaskItems({ navigation }) {
 
   useEffect(() => {
     db.transaction((tx) => {
-      tx.executeSql('create table if not exists items (id integer primary key not null, value text);');
+      tx.executeSql('create table if not exists items (id integer primary key not null, value text, hour int, minute int, timeSwitch int, notificationId text);');
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
     });

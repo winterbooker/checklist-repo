@@ -6,12 +6,12 @@ import SubtaskItems from '../components/SubtaskItems';
 
 
 export default function ListScreen({ route }) {
-  const { itemId } = route.params;
+  const { id, itemId } = route.params;
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding" keyboardVerticalOffset={100}>
       <ScrollView style={styles.scrollview}>
-        <SubtaskItems itemId={itemId} />
+        <SubtaskItems id={id} itemId={itemId} />
       </ScrollView>
       <SafeAreaView />
     </KeyboardAvoidingView>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Modal, LayoutAnimation } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Modal, LayoutAnimation, Alert } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
@@ -28,7 +28,17 @@ export default function TaskItems({ navigation }) {
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
     });
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      db.transaction((tx) => {
+        tx.executeSql('select * from items', [],
+          (_, { rows: { _array } }) => setItems((_array)));
+        tx.executeSql('select * from items', [],
+          (_, { rows: { _array } }) => console.log((_array)));
+      });
+      console.log('Refreshed!');
+    });
+    return unsubscribe;
+  }, [navigation]);
 
 
   if (items === null || items.length === 0) {
@@ -55,29 +65,43 @@ export default function TaskItems({ navigation }) {
   );
 
 
-
   const addModal = (textModal, modalIndex) => {
     if (textModal === null || textModal === '') {
       return false;
     }
-    db.transaction((tx) => {
-      tx.executeSql('select notificationId from items where id = ?;', [modalIndex],
-        (_, { rows: { _array } }) => Notifications.cancelScheduledNotificationAsync((_array[0].notificationId)));
-      tx.executeSql('select hour, minute from items where id = ?;', [modalIndex],
-        (_, { rows: { _array } }) => Notifications.scheduleNotificationAsync({
-          content: {
-            body: String(textModal),
-          },
-          trigger: {
-            hour: Number(_array[0].hour),
-            minute: Number(_array[0].minute),
-            repeats: true,
-          },
-        }));
-      tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
-      tx.executeSql('select * from items', [],
-        (_, { rows: { _array } }) => setItems(_array));
-    }, [], getLastId);
+
+    const isNotificationId = () => {
+      if (notificationId === null) {
+        console.log(notificationId);
+        db.transaction((tx) => {
+          tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
+          tx.executeSql('select * from items', [],
+            (_, { rows: { _array } }) => setItems(_array));
+        });
+      } else {
+        console.log(notificationId);
+        db.transaction((tx) => {
+          tx.executeSql('select notificationId from items where id = ?;', [modalIndex],
+            (_, { rows: { _array } }) => Notifications.cancelScheduledNotificationAsync((_array[0].notificationId)));
+          tx.executeSql('select hour, minute from items where id = ?;', [modalIndex],
+            (_, { rows: { _array } }) => Notifications.scheduleNotificationAsync({
+              content: {
+                body: String(textModal),
+              },
+              trigger: {
+                hour: Number(_array[0].hour),
+                minute: Number(_array[0].minute),
+                repeats: true,
+              },
+            }));
+          tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
+          tx.executeSql('select * from items', [],
+            (_, { rows: { _array } }) => setItems(_array));
+        }, [], getLastId);
+      }
+    };
+
+    isNotificationId(modalIndex);
   };
 
 
@@ -92,6 +116,13 @@ export default function TaskItems({ navigation }) {
   };
 
 
+  const getNotificationId = (id) => {
+    db.transaction((tx) => {
+      tx.executeSql('select notificationId from items where id = ?;', [id],
+        (_, { rows: { _array } }) => setNotificationId((_array[0].notificationId)));
+    });
+  };
+
 
   return (
     <View style={styles.sectionContainer}>
@@ -103,6 +134,7 @@ export default function TaskItems({ navigation }) {
               activeOpacity={1}
               onPress={() => navigation.navigate('LIST', { id, itemId: id, name: value })}
               onLongPress={() => {
+                getNotificationId(id);
                 setModalIndex(id);
                 setModalVisible(true);
                 setListName(value);

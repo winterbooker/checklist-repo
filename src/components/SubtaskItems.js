@@ -167,7 +167,7 @@ export default function SubtaskItems({ id, itemId }) {
           selectionColor="#000"
           theme={{ colors: { text: '#000', primary: '#fff' }, roundness: 0 }}
           placeholderTextColor="#8d8d8f"
-          placeholder="タスクを追加"
+          placeholder="リストを追加"
           value={text}
           onChangeText={(text) => setText(text)}
           onSubmitEditing={() => {
@@ -177,13 +177,13 @@ export default function SubtaskItems({ id, itemId }) {
           left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
         />
         <View style={styles.timeContainer}>
-          <Button style={styles.timeTitle} onPress={showDatePicker}>通知</Button>
+          <Button style={styles.timeTitle} color="#218380" onPress={showDatePicker}>通知</Button>
           {!(timeHour === null) && (
             <Text style={styles.timeSetting}>
               {timeHour}:{( '00' + timeMinute ).slice(-2)}
             </Text>
           ) }
-          <Switch style={styles.timeSwitch} onValueChange={switchValue} value={timeIsEnabled} />
+          <Switch style={styles.timeSwitch} color="#218380" onValueChange={switchValue} value={timeIsEnabled} />
           <DateTimePickerModal
             date={new Date()}
             cancelTextIOS="閉じる"
@@ -324,7 +324,7 @@ export default function SubtaskItems({ id, itemId }) {
         selectionColor="#000"
         theme={{ colors: { text: '#000', primary: '#fff' }, roundness: 0 }}
         placeholderTextColor="#8d8d8f"
-        placeholder="タスクを追加"
+        placeholder="リストを追加"
         value={text}
         onChangeText={(text) => setText(text)}
         onSubmitEditing={() => {
@@ -334,13 +334,13 @@ export default function SubtaskItems({ id, itemId }) {
         left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
       />
       <View style={styles.timeContainer}>
-        <Button style={styles.timeTitle} onPress={showDatePicker}>通知</Button>
+        <Button style={styles.timeTitle} color="#218380" onPress={showDatePicker}>通知</Button>
         {!(timeHour === null) && (
           <Text style={styles.timeSetting}>
             {timeHour}:{( '00' + timeMinute ).slice(-2)}
           </Text>
         ) }
-        <Switch style={styles.timeSwitch} onValueChange={switchValue} value={timeIsEnabled} />
+        <Switch style={styles.timeSwitch} color="#218380" onValueChange={switchValue} value={timeIsEnabled} />
         <DateTimePickerModal
           date={new Date()}
           cancelTextIOS="閉じる"
@@ -360,6 +360,9 @@ export default function SubtaskItems({ id, itemId }) {
   );
 }
 
+/*
+
+*/
 
 const styles = StyleSheet.create({
   container: {
@@ -404,7 +407,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: '#fff',
-    marginTop: 20,
     marginBottom: 50,
   },
   timeContainer: {

@@ -109,6 +109,38 @@ const renderSwitch = (value, schedule) => {
 };
 
 
+
+const cancel = () => {
+  db.transaction((tx) => {
+    tx.executeSql('select notificationId from items where id = ?;', [modalIndex],
+      (_, { rows: { _array } }) => Notifications.cancelScheduledNotificationAsync(_array[0].notificationId));
+  });
+};
+
+
+const getLastId = async () => {
+  db.transaction((tx) => {
+    tx.executeSql('select hour, minute from items where id = ?;', [modalIndex],
+      (_, { rows: { _array } }) => Notifications.scheduleNotificationAsync({
+        content: {
+          body: String(textModal),
+        },
+        trigger: {
+          hour: Number(_array[0].hour),
+          minute: Number(_array[0].minute),
+          repeats: true,
+        },
+      }));
+  });
+  const notifications = await Notifications.getAllScheduledNotificationsAsync();
+  const identifier = notifications.slice(-1)[0].identifier;
+  db.transaction((tx) => {
+    tx.executeSql('update items set notificationId = ? where id = ?', [identifier, modalIndex]);
+    tx.executeSql('select * from items', [], (_, { rows }) =>
+      console.log('getID' + JSON.stringify(rows)));
+  });
+};
+
 swipeItems: {
   flexDirection: 'row',
   alignItems: 'center',

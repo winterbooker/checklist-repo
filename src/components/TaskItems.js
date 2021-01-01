@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Modal, LayoutAnimation, Alert } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Modal, LayoutAnimation } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
@@ -16,7 +16,6 @@ export default function TaskItems({ navigation }) {
   const [modalIndex, setModalIndex] = useState(0);
   const [listName, setListName] = useState('');
   const [notificationId, setNotificationId] = useState(null);
-  const [forceUpdate, forceUpdateId] = useForceUpdate();
 
 
   LayoutAnimation.easeInEaseOut();
@@ -28,17 +27,7 @@ export default function TaskItems({ navigation }) {
       tx.executeSql('select * from items;', [],
         (_, { rows: { _array } }) => setItems(_array));
     });
-    const unsubscribe = navigation.addListener('focus', () => {
-      db.transaction((tx) => {
-        tx.executeSql('select * from items', [],
-          (_, { rows: { _array } }) => setItems((_array)));
-        tx.executeSql('select * from items', [],
-          (_, { rows: { _array } }) => console.log((_array)));
-      });
-      console.log('Refreshed!');
-    });
-    return unsubscribe;
-  }, [navigation]);
+  }, []);
 
 
   if (items === null || items.length === 0) {
@@ -72,14 +61,12 @@ export default function TaskItems({ navigation }) {
 
     const isNotificationId = () => {
       if (notificationId === null) {
-        console.log(notificationId);
         db.transaction((tx) => {
           tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
           tx.executeSql('select * from items', [],
             (_, { rows: { _array } }) => setItems(_array));
         });
       } else {
-        console.log(notificationId);
         db.transaction((tx) => {
           tx.executeSql('select notificationId from items where id = ?;', [modalIndex],
             (_, { rows: { _array } }) => Notifications.cancelScheduledNotificationAsync((_array[0].notificationId)));
@@ -87,6 +74,7 @@ export default function TaskItems({ navigation }) {
             (_, { rows: { _array } }) => Notifications.scheduleNotificationAsync({
               content: {
                 body: String(textModal),
+                sound: 'default',
               },
               trigger: {
                 hour: Number(_array[0].hour),
@@ -110,8 +98,6 @@ export default function TaskItems({ navigation }) {
     const identifier = notifications.slice(-1)[0].identifier;
     db.transaction((tx) => {
       tx.executeSql('update items set notificationId = ? where id = ?', [identifier, modalIndex]);
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
     }, [], setNotificationId(identifier));
   };
 
@@ -169,12 +155,6 @@ export default function TaskItems({ navigation }) {
     </View>
   );
 }
-
-
-const useForceUpdate = () => {
-  const [value, setValue] = useState(0);
-  return [() => setValue(value + 1), value];
-};
 
 
 const styles = StyleSheet.create({

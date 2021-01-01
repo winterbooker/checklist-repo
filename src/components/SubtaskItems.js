@@ -47,7 +47,6 @@ export default function SubtaskItems({ id, itemId }) {
   }, []);
 
 
-
   const add = (text) => {
     if (text === null || text === '') {
       return false;
@@ -58,7 +57,6 @@ export default function SubtaskItems({ id, itemId }) {
         (_, { rows: { _array } }) => setItems(_array));
     });
   };
-
 
 
   const showDatePicker = () => {
@@ -83,6 +81,7 @@ export default function SubtaskItems({ id, itemId }) {
       Notifications.scheduleNotificationAsync({
         content: {
           body: String(value),
+          sound: 'default',
         },
         trigger: {
           hour: Number(hour - 24),
@@ -100,6 +99,7 @@ export default function SubtaskItems({ id, itemId }) {
       Notifications.scheduleNotificationAsync({
         content: {
           body: String(value),
+          sound: 'default',
         },
         trigger: {
           hour: Number(hour),
@@ -128,6 +128,7 @@ export default function SubtaskItems({ id, itemId }) {
         Notifications.scheduleNotificationAsync({
           content: {
             body: String(value),
+            sound: 'default',
           },
           trigger: {
             hour: Number(timeHour),
@@ -152,8 +153,6 @@ export default function SubtaskItems({ id, itemId }) {
     const identifier = notifications.slice(-1)[0].identifier;
     db.transaction((tx) => {
       tx.executeSql('update items set notificationId = ? where id = ?', [identifier, id]);
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
     }, [], setNotificationId(identifier));
   };
 
@@ -167,7 +166,7 @@ export default function SubtaskItems({ id, itemId }) {
           selectionColor="#000"
           theme={{ colors: { text: '#000', primary: '#fff' }, roundness: 0 }}
           placeholderTextColor="#8d8d8f"
-          placeholder="リストを追加"
+          placeholder="項目を追加"
           value={text}
           onChangeText={(text) => setText(text)}
           onSubmitEditing={() => {
@@ -177,7 +176,7 @@ export default function SubtaskItems({ id, itemId }) {
           left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
         />
         <View style={styles.timeContainer}>
-          <Button style={styles.timeTitle} color="#218380" onPress={showDatePicker}>通知</Button>
+          <Button style={styles.timeTitle} color="#218380" onPress={showDatePicker}>通知設定</Button>
           {!(timeHour === null) && (
             <Text style={styles.timeSetting}>
               {timeHour}:{( '00' + timeMinute ).slice(-2)}
@@ -200,7 +199,6 @@ export default function SubtaskItems({ id, itemId }) {
   }
 
 
-
   const handleDelete = (id, listId) => {
     db.transaction((tx) => {
       tx.executeSql('delete from list where id = ?;', [id]);
@@ -210,13 +208,11 @@ export default function SubtaskItems({ id, itemId }) {
   };
 
 
-
   const rightSwipe = (id, listId) => (
     <TouchableOpacity style={styles.deleteBox} onPress={() => handleDelete(id, listId)}>
       <Text style={styles.deleteText}>削除</Text>
     </TouchableOpacity>
   );
-
 
 
   const check = (id) => {
@@ -228,7 +224,6 @@ export default function SubtaskItems({ id, itemId }) {
   };
 
 
-
   const addModal = (textModal, modalIndex) => {
     if (textModal === null || textModal === '') {
       return false;
@@ -237,28 +232,8 @@ export default function SubtaskItems({ id, itemId }) {
       tx.executeSql('update list set value = ? where id = ?', [textModal, modalIndex]);
       tx.executeSql('select * from list where listId = ?;', [itemId],
         (_, { rows: { _array } }) => setItems(_array));
-      tx.executeSql('select * from list where listId = ?', [itemId],
-        (_, { rows }) => console.log(JSON.stringify(rows)));
     });
   };
-
-
-
-  // 通知設定を全件取得する
-  const getall = async () => {
-    const notifications = await Notifications.getAllScheduledNotificationsAsync();
-    const identifier = notifications;
-    console.log(identifier);
-  };
-
-  // 通知設定を全件削除する
-  const cancel = async () => {
-    Notifications.cancelAllScheduledNotificationsAsync();
-    const notifications = await Notifications.getAllScheduledNotificationsAsync();
-    const identifier = notifications;
-    console.log(identifier);
-  };
-
 
 
   return (
@@ -324,7 +299,7 @@ export default function SubtaskItems({ id, itemId }) {
         selectionColor="#000"
         theme={{ colors: { text: '#000', primary: '#fff' }, roundness: 0 }}
         placeholderTextColor="#8d8d8f"
-        placeholder="リストを追加"
+        placeholder="項目を追加"
         value={text}
         onChangeText={(text) => setText(text)}
         onSubmitEditing={() => {
@@ -334,7 +309,7 @@ export default function SubtaskItems({ id, itemId }) {
         left={<TextInput.Icon icon="plus" color="#8d8d8f" />}
       />
       <View style={styles.timeContainer}>
-        <Button style={styles.timeTitle} color="#218380" onPress={showDatePicker}>通知</Button>
+        <Button style={styles.timeTitle} color="#218380" onPress={showDatePicker}>通知設定</Button>
         {!(timeHour === null) && (
           <Text style={styles.timeSetting}>
             {timeHour}:{( '00' + timeMinute ).slice(-2)}
@@ -352,17 +327,10 @@ export default function SubtaskItems({ id, itemId }) {
           onCancel={hideDatePicker}
         />
       </View>
-      <View style={styles.test}>
-        <Button onPress={() => getall()}>全データ取得</Button>
-        <Button onPress={() => cancel()}>全データ削除</Button>
-      </View>
     </KeyboardAvoidingView>
   );
 }
 
-/*
-
-*/
 
 const styles = StyleSheet.create({
   container: {
@@ -429,8 +397,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     marginRight: 20,
-  },
-  test: {
-    marginTop: 100,
   },
 });

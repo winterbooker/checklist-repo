@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, SafeAreaView } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import * as SQLite from 'expo-sqlite';
@@ -16,33 +16,14 @@ export default function HomeScreen({ navigation }) {
   const [forceUpdate, forceUpdateId] = useForceUpdate();
 
 
-  useEffect(() => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        'create table if not exists items (id integer primary key not null, value text, hour int, minute int, dateSwitch int, timeSwitch int, repeatSwitch int, notificationId text);',
-      );
-      // tx.executeSql(
-      //  'drop table items;',
-      // );
-    });
-  });
-
-
   const add = (text) => {
     if (text === null || text === '') {
       return false;
     }
-
-
     db.transaction((tx) => {
-      tx.executeSql('insert into items (value) values (?)', [text]);
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
+      tx.executeSql('insert into items (value) values (?);', [text]);
+      tx.executeSql('select * from items;', [],
+        (_, { rows: { _array } }) => setItems(_array));
     },
     null,
     forceUpdate);
@@ -57,7 +38,7 @@ export default function HomeScreen({ navigation }) {
           selectionColor="#fff"
           theme={{ colors: { text: '#fff', primary: '#fff' }, roundness: 0 }}
           placeholderTextColor="#ddd"
-          placeholder="タスクを追加"
+          placeholder="アイテムを追加"
           value={text}
           onChangeText={(text) => setText(text)}
           onSubmitEditing={() => {
@@ -83,7 +64,7 @@ const useForceUpdate = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f7',
+    backgroundColor: '#F4F6F6',
   },
   textInput: {
     backgroundColor: '#434343',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Dimensions, Modal, LayoutAnimation } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Modal, LayoutAnimation } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as SQLite from 'expo-sqlite';
@@ -7,8 +7,6 @@ import * as Notifications from 'expo-notifications';
 
 
 const db = SQLite.openDatabase('db');
-const windowHeight = Dimensions.get('window').height;
-const windowWidth = Dimensions.get('window').width;
 
 
 export default function TaskItems({ navigation }) {
@@ -17,17 +15,17 @@ export default function TaskItems({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const [listName, setListName] = useState('');
+  const [notificationId, setNotificationId] = useState(null);
+
 
   LayoutAnimation.easeInEaseOut();
 
 
   useEffect(() => {
     db.transaction((tx) => {
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
+      tx.executeSql('create table if not exists items (id integer primary key not null, value text, hour int, minute int, timeSwitch int, notificationId text);');
+      tx.executeSql('select * from items;', [],
+        (_, { rows: { _array } }) => setItems(_array));
     });
   }, []);
 
@@ -39,17 +37,12 @@ export default function TaskItems({ navigation }) {
 
   const handleDelete = (id) => {
     db.transaction((tx) => {
+      tx.executeSql('select notificationId from items where id = ?;', [id],
+        (_, { rows: { _array } }) => Notifications.cancelScheduledNotificationAsync((_array[0].notificationId)));
       tx.executeSql('delete from items where id = ?;', [id]);
-    });
-    db.transaction((tx) => {
       tx.executeSql('delete from list where listId = ?;', [id]);
-    });
-    db.transaction((tx) => {
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
+      tx.executeSql('select * from items;', [],
+        (_, { rows: { _array } }) => setItems(_array));
     });
   };
 
@@ -66,17 +59,54 @@ export default function TaskItems({ navigation }) {
       return false;
     }
 
+    const isNotificationId = () => {
+      if (notificationId === null) {
+        db.transaction((tx) => {
+          tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
+          tx.executeSql('select * from items', [],
+            (_, { rows: { _array } }) => setItems(_array));
+        });
+      } else {
+        db.transaction((tx) => {
+          tx.executeSql('select notificationId from items where id = ?;', [modalIndex],
+            (_, { rows: { _array } }) => Notifications.cancelScheduledNotificationAsync((_array[0].notificationId)));
+          tx.executeSql('select hour, minute from items where id = ?;', [modalIndex],
+            (_, { rows: { _array } }) => Notifications.scheduleNotificationAsync({
+              content: {
+                body: String(textModal),
+                sound: 'default',
+              },
+              trigger: {
+                hour: Number(_array[0].hour),
+                minute: Number(_array[0].minute),
+                repeats: true,
+              },
+            }));
+          tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
+          tx.executeSql('select * from items', [],
+            (_, { rows: { _array } }) => setItems(_array));
+        }, [], getLastId);
+      }
+    };
+
+    isNotificationId(modalIndex);
+  };
+
+
+  const getLastId = async () => {
+    const notifications = await Notifications.getAllScheduledNotificationsAsync();
+    const identifier = notifications.slice(-1)[0].identifier;
     db.transaction((tx) => {
-      tx.executeSql('update items set value = ? where id = ?', [textModal, modalIndex]);
-      tx.executeSql(
-        'select * from items;',
-        null,
-        (_, { rows: { _array } }) => setItems(_array),
-      );
-      tx.executeSql('select * from items', [], (_, { rows }) =>
-        console.log(JSON.stringify(rows)));
-    },
-    null);
+      tx.executeSql('update items set notificationId = ? where id = ?', [identifier, modalIndex]);
+    }, [], setNotificationId(identifier));
+  };
+
+
+  const getNotificationId = (id) => {
+    db.transaction((tx) => {
+      tx.executeSql('select notificationId from items where id = ?;', [id],
+        (_, { rows: { _array } }) => setNotificationId((_array[0].notificationId)));
+    });
   };
 
 
@@ -87,8 +117,10 @@ export default function TaskItems({ navigation }) {
           <Swipeable renderRightActions={() => rightSwipe(id)}>
             <TouchableOpacity
               style={styles.item}
-              onPress={() => navigation.navigate('サブタスク', { id, itemId: id })}
+              activeOpacity={1}
+              onPress={() => navigation.navigate('LIST', { id, itemId: id, name: value })}
               onLongPress={() => {
+                getNotificationId(id);
                 setModalIndex(id);
                 setModalVisible(true);
                 setListName(value);
@@ -99,13 +131,13 @@ export default function TaskItems({ navigation }) {
           </Swipeable>
         </View>
       ))}
-      <Modal animationType="fade" transparent={true} visible={modalVisible} style={styles.modal}>
+      <Modal style={styles.modal} animationType="fade" transparent={true} visible={modalVisible}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <TextInput
               style={styles.textInputModal}
               selectionColor="#000"
-              theme={{ roundness: 0 }}
+              theme={{ colors: { text: '#000', primary: '#ddd' }, roundness: 0 }}
               placeholderTextColor="#B8B8B8"
               placeholder={listName}
               value={textModal}
@@ -116,7 +148,7 @@ export default function TaskItems({ navigation }) {
                 setModalVisible(!modalVisible);
               }}
             />
-            <Button style={styles.modalButton} mode="contained" color="#B8B8B8" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
+            <Button style={styles.modalButton} mode="contained" color="#ddd" onPress={() => setModalVisible(!modalVisible)}>閉じる</Button>
           </View>
         </View>
       </Modal>
@@ -127,7 +159,6 @@ export default function TaskItems({ navigation }) {
 
 const styles = StyleSheet.create({
   sectionContainer: {
-    backgroundColor: '#fff',
     flex: 1,
   },
   item: {
@@ -154,6 +185,7 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: '#fff',
+    fontWeight: 'bold',
   },
   centeredView: {
     flex: 1,
@@ -162,8 +194,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    height: windowHeight * 0.3,
-    width: windowWidth * 0.8,
+    height: 280,
+    width: 300,
     borderRadius: 5,
     backgroundColor: '#ddd',
     alignItems: 'center',

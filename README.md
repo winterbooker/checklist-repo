@@ -1,7 +1,7 @@
 **アプリ名**：「CHECKOUT」
 <br>
 <br>
-**用途**：チェックリストを作成することができます。
+**用途**：チェックリストの作成。
 <br>
 <br>
 <img src="https://user-images.githubusercontent.com/66158552/106701154-9128e200-6629-11eb-9798-2bcde7650035.jpg" width="180px">

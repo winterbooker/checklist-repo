@@ -188,6 +188,7 @@ export default function SubtaskItems({ id, itemId }) {
             cancelTextIOS="閉じる"
             confirmTextIOS="設定する"
             headerTextIOS="時間を設定"
+            isDarkModeEnabled={false}
             isVisible={isDatePickerVisible}
             mode="time"
             onConfirm={handleConfirm}
@@ -279,8 +280,6 @@ export default function SubtaskItems({ id, itemId }) {
             <TextInput
               style={styles.textInputModal}
               selectionColor="#000"
-              theme={{ colors: { text: '#000', primary: '#ddd' }, roundness: 0 }}
-              placeholderTextColor="#B8B8B8"
               placeholder={listName}
               value={textModal}
               onChangeText={(textModal) => setTextModal(textModal)}
@@ -321,6 +320,7 @@ export default function SubtaskItems({ id, itemId }) {
           cancelTextIOS="閉じる"
           confirmTextIOS="設定する"
           headerTextIOS="時間を設定"
+          isDarkModeEnabled={false}
           isVisible={isDatePickerVisible}
           mode="time"
           onConfirm={handleConfirm}

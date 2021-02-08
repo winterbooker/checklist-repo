@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Provider as PaperProvider } from 'react-native-paper';
+import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Notifications from 'expo-notifications';
@@ -7,6 +7,19 @@ import * as Notifications from 'expo-notifications';
 
 import HomeScreen from './src/screens/HomeScreen';
 import ListScreen from './src/screens/ListScreen';
+
+
+const theme = {
+  ...DefaultTheme,
+  roundness: 0,
+  mode: 'exact',
+  colors: {
+    ...DefaultTheme.colors,
+    text: '#000',
+    primary: '#ddd',
+    placeholder: '#B8B8B8',
+  },
+};
 
 
 Notifications.setNotificationHandler({
@@ -54,7 +67,7 @@ export default function App() {
   });
   return (
     <NavigationContainer>
-      <PaperProvider>
+      <PaperProvider theme={theme}>
         <MyStack />
       </PaperProvider>
     </NavigationContainer>

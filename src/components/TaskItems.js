@@ -137,8 +137,6 @@ export default function TaskItems({ navigation }) {
             <TextInput
               style={styles.textInputModal}
               selectionColor="#000"
-              theme={{ colors: { text: '#000', primary: '#ddd' }, roundness: 0 }}
-              placeholderTextColor="#B8B8B8"
               placeholder={listName}
               value={textModal}
               onChangeText={(textModal) => setTextModal(textModal)}

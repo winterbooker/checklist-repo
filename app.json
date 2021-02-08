@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "checkout",
+    "name": "CHECKOUT",
     "slug": "checkout",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,15 +11,20 @@
       "backgroundColor": "#ffffff"
     },
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "enabled": true,
+      "fallbackToCacheTimeout": 30000
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bukublog",
+      "buildNumber": "1.0.0"
     },
     "android": {
+      "package": "com.bukublog",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
